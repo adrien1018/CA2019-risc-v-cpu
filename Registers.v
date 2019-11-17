@@ -22,13 +22,17 @@ module Registers (
   // Register File
   reg    [31:0] register[0:31];
 
+  initial begin
+    register[0] = 32'b0; // x0 register
+  end
+
   // Read Data
   assign RS1data_o = register[RS1addr_i];
   assign RS2data_o = register[RS2addr_i];
 
   // Write Data
   always @(posedge clk_i) begin
-    if (RegWrite_i)
+    if (RegWrite_i && RDaddr_i != 5'b0) // not write to x0
       register[RDaddr_i] <= RDdata_i;
   end
 
