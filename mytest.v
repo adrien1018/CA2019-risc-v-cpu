@@ -6,6 +6,7 @@ reg                Clk;
 reg                Reset;
 reg                Start;
 integer            i, outfile, counter;
+reg     [1023:0]   file;
 
 always #(`CYCLE_TIME/2) Clk = ~Clk;
 
@@ -30,7 +31,10 @@ initial begin
     end
 
     // Load instructions into instruction memory
-    $readmemb("my_instruction.txt", CPU.Instruction_Memory.memory);
+    if ($value$plusargs("file=%s", file))
+      $readmemb(file, CPU.Instruction_Memory.memory);
+    else
+      $readmemb("instruction.txt", CPU.Instruction_Memory.memory);
 
     // Open output file
     outfile = $fopen("output.txt") | 1;
@@ -47,11 +51,13 @@ initial begin
 end
 
 always@(posedge Clk) begin
-  /*
-    $fdisplay(outfile, "imm=%d flag=%d alu_op=%b alu_result=%d",
+    /*
+    $fdisplay(outfile, "imm=%d flag=%d alu_op=%b alu_opr=%d,%d alu_result=%d",
       $signed(CPU.imm),
       CPU.flag_2,
       CPU.alu_op_3,
+      CPU.alu_1_opr_3,
+      CPU.alu_2_opr_3,
       $signed(CPU.alu_result_3)
     );
     */

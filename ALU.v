@@ -36,7 +36,8 @@ module ALU (
       4'b0100: // XOR
         result = opr_1 ^ opr_2;
       4'b0101: // SRL, SRA
-        result = flag ? $signed(opr_1) >>> opr_2[4:0] : opr_1 >> opr_2[4:0];
+        // the $signed on the right is necessary, otherwise >>> would be unsigned shift
+        result = flag ? $signed(opr_1) >>> opr_2[4:0] : $signed(opr_1 >> opr_2[4:0]);
       4'b0110: // OR
         result = opr_1 | opr_2;
       4'b0111: // AND
