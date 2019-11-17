@@ -48,16 +48,19 @@ initial begin
 end
 
 always@(posedge Clk) begin
-    /*
-    $fdisplay(outfile, "imm=%d flag=%d alu_op=%b alu_opr=%d,%d alu_result=%d",
-      $signed(CPU.imm),
-      CPU.flag_2,
-      CPU.alu_op_3,
-      CPU.alu_1_opr_3,
-      CPU.alu_2_opr_3,
-      $signed(CPU.alu_result_3)
-    );
-    */
+    if (0) // used for debugging
+      $display("imm=%d flag=%d alu_op=%b alu_opr=%d,%d branch=%b ins=%b eq=%b taken=%b alu_result=%d",
+        $signed(CPU.imm_3),
+        CPU.flag_2,
+        CPU.alu_op_3,
+        CPU.alu_1_opr_3,
+        CPU.alu_2_opr_3,
+        CPU.is_branch_3,
+        CPU.instruction_2[14:12],
+        CPU.eq_2,
+        CPU.taken,
+        $signed(CPU.alu_result_3)
+      );
     $display("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d 0x%x",
       $signed(CPU.Registers.register[ 0]),
       $signed(CPU.Registers.register[ 1]),

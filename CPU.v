@@ -36,20 +36,21 @@ module CPU (
 
   // ----- Register read stage -----
   wire [31:0] instruction_2 = instruction_1;
-  wire [31:0] now_pc_2 = now_pc_1;
   wire [31:0] reg_write_data_back2; // from stage 5
   wire        reg_write_back2; // from stage 5
+  wire [31:0] now_pc_2 = now_pc_1;
   wire [31:0] advance_pc_2 = advance_pc_1;
   wire [31:0] alu_1_opr_2;
   wire [31:0] alu_2_opr_2;
+  wire [31:0] imm_2;
   wire [3:0]  alu_op_2;
   wire        flag_2;
   wire        eq_2;
   wire        reg_write_2;
+  wire        is_branch_2;
 
   wire [31:0] reg_1_data;
   wire [31:0] reg_2_data;
-  wire [31:0] imm;
   wire        alu_2_src;
   wire [1:0]  alu_control;
 
@@ -67,8 +68,9 @@ module CPU (
   Control control(
     .opcode      (instruction_2[6:0]),
     .alu_control (alu_control),
+    .alu_2_src   (alu_2_src),
     .reg_write   (reg_write_2),
-    .alu_2_src   (alu_2_src)
+    .is_branch   (is_branch_2)
   );
 
   ALU_Control alu_ctrl_unit(
@@ -81,30 +83,40 @@ module CPU (
 
   Immediate_Gen imm_gen(
     .insr   (instruction_2),
-    .result (imm)
+    .result (imm_2)
   );
 
   assign alu_1_opr_2 = reg_1_data;
 
   MUX32_2 mux_alu_2_opr (
     .in0     (reg_2_data),
-    .in1     (imm),
+    .in1     (imm_2),
     .control (alu_2_src),
     .result  (alu_2_opr_2)
   );
 
   // ----- ALU stage -----
+  wire [31:0] now_pc_3 = now_pc_2;
   wire [31:0] advance_pc_3 = advance_pc_2;
   wire [31:0] alu_1_opr_3 = alu_1_opr_2;
   wire [31:0] alu_2_opr_3 = alu_2_opr_2;
+  wire [31:0] imm_3 = imm_2;
   wire [3:0]  alu_op_3 = alu_op_2;
   wire        flag_3 = flag_2;
   wire        eq_3 = eq_2;
+  wire        is_branch_3 = is_branch_2;
   wire        reg_write_3 = reg_write_2;
   // wire[31:0] taken_pc_3;
   wire [31:0] alu_result_3;
 
   wire        taken;
+  wire [31:0] branch_target;
+
+  Adder branch_dest_adder(
+    .opr_1  (now_pc_3),
+    .opr_2  (imm_3),
+    .result (branch_target)
+  );
 
   ALU alu(
     .opr_1   (alu_1_opr_3),
@@ -113,10 +125,15 @@ module CPU (
     .flag    (flag_3),
     .eq      (eq_3),
     .result  (alu_result_3),
-    .taken   (taken_3)
+    .taken   (taken)
   );
 
-  assign next_pc_back1 = advance_pc_3; // deal with branch here
+  MUX32_2 mux_next_pc(
+    .in0     (advance_pc_3),
+    .in1     (branch_target),
+    .control (taken && is_branch_3),
+    .result  (next_pc_back1)
+  );
 
   // ----- Data write stage (omitted) -----
   wire [31:0] alu_result_4 = alu_result_3;

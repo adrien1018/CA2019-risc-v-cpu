@@ -21,6 +21,6 @@ module ALU_Control (
   assign flag = (control[1] == 1'b1 && ins[2:0] == 3'b101 && ins[4]) || // SRA/SRAI
                 (control == 2'b11 && ins[2:0] == 3'b000 && ins[4]) || // SUB
                 (control == 2'b01 && !ins[2]); // BEQ/BNE
-  assign eq = ins[2] ^ ins[0];
+  assign eq = ~ins[2] ^ ins[0];
 
 endmodule
