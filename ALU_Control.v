@@ -6,7 +6,7 @@ module ALU_Control (
   eq
 );
 
-  input  [4:0] ins; // instruction[30|25|14:12]
+  input  [4:0] ins;     // instruction[30|25|14:12]
   input  [1:0] control; // 2'b01 if opcode = b0?10011 (arithmetic)
                         // 2'b10 if opcode = b1100011 (branch)
   output [3:0] alu_op;
