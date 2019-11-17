@@ -36,9 +36,6 @@ initial begin
     else
       $readmemb("instruction.txt", CPU.Instruction_Memory.memory);
 
-    // Open output file
-    outfile = $fopen("output.txt") | 1;
-
     Clk = 0;
     Reset = 0;
     Start = 0;
@@ -61,7 +58,7 @@ always@(posedge Clk) begin
       $signed(CPU.alu_result_3)
     );
     */
-    $fdisplay(outfile, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d 0x%x",
+    $display("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d 0x%x",
       $signed(CPU.Registers.register[ 0]),
       $signed(CPU.Registers.register[ 1]),
       $signed(CPU.Registers.register[ 2]),

@@ -2,10 +2,14 @@
 
 set -e
 
+function rand() {
+  echo "ibase=16; "$(xxd -ps -u -l 8 /dev/urandom) | bc
+}
+
 if [ $# -ne 0 ]; then
   SEED="$1"
 else
-  SEED=$RANDOM
+  SEED=$(rand)
 fi
 
 echo "Seed: $SEED"

@@ -66,7 +66,7 @@ module ALU (
           result = 32'b0;
         else
           result = $signed(opr_1) % $signed(opr_2);
-      4'b1101: // REMU
+      4'b1111: // REMU
         result = opr_2 == 32'b0 ? opr_1 : opr_1 % opr_2;
     endcase
   end
