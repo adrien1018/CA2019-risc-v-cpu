@@ -12,7 +12,8 @@ module ALU (
   input  [31:0] opr_2;
   input  [3:0]  alu_op; // {ins[25], ins[14:12]} if opcode == b0?10011
                         // {2'b0, ins[14:13]}    if opcode == b1100011
-                        // LUI/AUIPC/JAL/JALR does not use ALU
+                        // 4'b0                  if opcode == b0?00011 ||
+                        // (LUI does not use ALU)   opcode == b????111
   input         flag;   // 1 if SRA/SRAI/SUB/BEQ/BNE else 0
   input         eq;     // ins[14] ^ ins[12]
   output [31:0] result;
