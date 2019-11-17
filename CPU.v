@@ -1,89 +1,136 @@
-module CPU
-(
-    clk_i, 
-    rst_i,
-    start_i
+module CPU (
+  clk_i,
+  rst_i,
+  start_i
 );
 
-// Ports
-input               clk_i;
-input               rst_i;
-input               start_i;
+  // Ports
+  input clk_i;
+  input rst_i;
+  input start_i;
 
-/*
-Control Control(
-    .Op_i       (),
-    .ALUOp_o    (),
-    .ALUSrc_o   (),
-    .RegWrite_o ()
-);
-*/
+  // ----- Instruction fetch stage -----
+  wire [31:0] next_pc_back1; // from stage 3
+  wire [31:0] now_pc_1;
+  wire [31:0] advance_pc_1;
+  wire [31:0] instruction_1;
 
-/*
-Adder Add_PC(
-    .data1_in   (),
-    .data2_in   (),
-    .data_o     ()
-);
-*/
+  PC PC(
+    .clk_i   (clk_i),
+    .rst_i   (rst_i),
+    .start_i (start_i),
+    .pc_i    (next_pc_back1),
+    .pc_o    (now_pc_1)
+  );
 
-PC PC(
-    .clk_i      (),
-    .rst_i      (),
-    .start_i    (),
-    .pc_i       (),
-    .pc_o       ()
-);
+  Adder pc_advance (
+    .opr_1  (now_pc_1),
+    .opr_2  (32'd4),
+    .result (advance_pc_1)
+  );
 
-Instruction_Memory Instruction_Memory(
-    .addr_i     (), 
-    .instr_o    ()
-);
+  Instruction_Memory Instruction_Memory(
+    .addr_i  (now_pc_1),
+    .instr_o (instruction_1)
+  );
 
-Registers Registers(
-    .clk_i      (),
-    .RS1addr_i   (),
-    .RS2addr_i   (),
-    .RDaddr_i   (), 
-    .RDdata_i   (),
-    .RegWrite_i (), 
-    .RS1data_o   (), 
-    .RS2data_o   () 
-);
+  // ----- Register read stage -----
+  wire [31:0] instruction_2 = instruction_1;
+  wire [31:0] now_pc_2 = now_pc_1;
+  wire [31:0] reg_write_data_back2; // from stage 5
+  wire        reg_write_back2; // from stage 5
+  wire [31:0] advance_pc_2 = advance_pc_1;
+  wire [31:0] alu_1_opr_2;
+  wire [31:0] alu_2_opr_2;
+  wire [3:0]  alu_op_2;
+  wire        flag_2;
+  wire        eq_2;
+  wire        reg_write_2;
 
-/*
-MUX32 MUX_ALUSrc(
-    .data1_i    (),
-    .data2_i    (),
-    .select_i   (),
-    .data_o     ()
-);
-*/
+  wire [31:0] reg_1_data;
+  wire [31:0] reg_2_data;
+  wire [31:0] imm;
+  wire        alu_2_src;
+  wire [1:0]  alu_control;
 
-/*
-Sign_Extend Sign_Extend(
-    .data_i     (),
-    .data_o     ()
-);
-*/
-  
-/*
-ALU ALU(
-    .data1_i    (),
-    .data2_i    (),
-    .ALUCtrl_i  (),
-    .data_o     (),
-    .Zero_o     ()
-);
-*/
+  Registers Registers(
+    .clk_i      (clk_i),
+    .RS1addr_i  (instruction_2[19:15]),
+    .RS2addr_i  (instruction_2[24:20]),
+    .RDaddr_i   (instruction_2[11:7]),
+    .RDdata_i   (reg_write_data_back2),
+    .RegWrite_i (reg_write_back2),
+    .RS1data_o  (reg_1_data),
+    .RS2data_o  (reg_2_data)
+  );
 
-/*
-ALU_Control ALU_Control(
-    .funct_i    (),
-    .ALUOp_i    (),
-    .ALUCtrl_o  ()
-);
-*/
+  Control control(
+    .opcode      (instruction_2[6:0]),
+    .alu_control (alu_control),
+    .reg_write   (reg_write_2),
+    .alu_2_src   (alu_2_src)
+  );
+
+  ALU_Control alu_ctrl_unit(
+    .ins     ({instruction_2[30], instruction_2[25], instruction_2[14:12]}),
+    .control (alu_control),
+    .alu_op  (alu_op_2),
+    .flag    (flag_2),
+    .eq      (eq_2)
+  );
+
+  Immediate_Gen imm_gen(
+    .insr   (instruction_2),
+    .result (imm)
+  );
+
+  assign alu_1_opr_2 = reg_1_data;
+
+  MUX32_2 mux_alu_2_opr (
+    .in0     (reg_2_data),
+    .in1     (imm),
+    .control (alu_2_src),
+    .result  (alu_2_opr_2)
+  );
+
+  // ----- ALU stage -----
+  wire [31:0] advance_pc_3 = advance_pc_2;
+  wire [31:0] alu_1_opr_3 = alu_1_opr_2;
+  wire [31:0] alu_2_opr_3 = alu_2_opr_2;
+  wire [3:0]  alu_op_3 = alu_op_2;
+  wire        flag_3 = flag_2;
+  wire        eq_3 = eq_2;
+  wire        reg_write_3 = reg_write_2;
+  // wire[31:0] taken_pc_3;
+  wire [31:0] alu_result_3;
+
+  wire        taken;
+
+  ALU alu(
+    .opr_1   (alu_1_opr_3),
+    .opr_2   (alu_2_opr_3),
+    .alu_op  (alu_op_3),
+    .flag    (flag_3),
+    .eq      (eq_3),
+    .result  (alu_result_3),
+    .taken   (taken_3)
+  );
+
+  assign next_pc_back1 = advance_pc_3; // deal with branch here
+
+  // ----- Data write stage (omitted) -----
+  wire [31:0] alu_result_4 = alu_result_3;
+  wire        reg_write_4 = reg_write_3;
+  wire [31:0] reg_write_data_4;
+
+  assign reg_write_data_4 = alu_result_4;
+
+  // ----- Register write stage -----
+  wire [31:0] reg_write_data_5 = reg_write_data_4;
+  wire        reg_write_5 = reg_write_4;
+
+  assign reg_write_data_back2 = reg_write_data_5;
+  assign reg_write_back2 = reg_write_5;
 
 endmodule
 
