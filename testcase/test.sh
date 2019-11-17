@@ -29,13 +29,13 @@ yes $'s\nrvi' |
     grep -Po '{= \K-?\d+(?=})|\(\K0x[\da-f]+(?=\))' |
     tail -n +2 |
     xargs -n34 -d'\n' |
-    tail -n +5 > "$RES2" &
+    tail -n +2 > "$RES2" &
 
 jupiter --dump-code "$HEX" "$ASM"
 { echo 'ibase=16;obase=2'; cat "$HEX" | tr a-z A-Z | sed 's/0X//'; } |
     bc | awk '{ printf("%32s\n", $1); }' |
     tr ' ' '0' |
-    tail +6 > "$INS"
+    tail +3 > "$INS"
 rm "$HEX"
 vvp ../mytest.vvp "+file=$INS" 2> /dev/null |
     sed 's/ \+/ /g; s/^ \| \(0x00000000 \)\?$//g' |

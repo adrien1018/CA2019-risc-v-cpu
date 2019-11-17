@@ -20,9 +20,6 @@ int main(int argc, char** argv) {
   puts(".globl __start");
   puts("text:");
   puts("__start:");
-  puts("add  t1, x0, x0");
-  puts("add  gp, x0, x0");
-  puts("add  sp, x0, x0");
 
   std::mt19937_64 gen;
   using mrand = std::uniform_int_distribution<int>;
