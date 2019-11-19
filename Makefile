@@ -4,7 +4,7 @@ VVP = testbench.vvp mytest.vvp
 all: $(VVP)
 
 $(VVP): %.vvp: %.v $(MODULES)
-	iverilog -o $@ $^
+	iverilog -Wall -o $@ $^
 
 clean:
 	rm -f $(VVP)

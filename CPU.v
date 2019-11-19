@@ -108,7 +108,7 @@ module CPU (
     .in0     (reg_1_data),
     .in1     (32'b0),
     .in2     (now_pc_1),
-    .in3     (), // not connected
+    .in3     (32'hXXXXXXXX),
     .control (alu_1_src),
     .result  (alu_1_opr_2)
   );
@@ -168,7 +168,7 @@ module CPU (
     .in0     (advance_pc_3),
     .in1     (branch_target),
     .in2     (alu_result_3),
-    .in3     (), // not connected
+    .in3     (32'hXXXXXXXX),
     .control (next_pc_control),
     .result  (next_pc_back1)
   );
@@ -203,7 +203,7 @@ module CPU (
     .in0     (alu_result_4),
     .in1     (mem_data),
     .in2     (advance_pc_4),
-    .in3     (), // not connected
+    .in3     (32'hXXXXXXXX),
     .control (reg_src_4),
     .result  (reg_write_data_4)
   );

@@ -10,15 +10,16 @@ module ALU (
 
   input  [31:0] opr_1;
   input  [31:0] opr_2;
-  input  [3:0]  alu_op; // {ins[25], ins[14:12]} if opcode == b0?10011
+  input  [3:0]  alu_op; // {ins[25], ins[14:12]} if opcode == b0110011
+                        // {1'b0, ins[14:12]}    if opcode == b0010011
                         // {2'b0, ins[14:13]}    if opcode == b1100011
                         // 4'b0                  otherwise
   input         flag;   // 1 if SRA/SRAI/SUB/BEQ/BNE else 0
-  input         eq;     // ins[14] ^ ins[12]
+  input         eq;     // ~ins[14] ^ ins[12]
   output [31:0] result;
   output        taken;
 
-  reg           result; // use reg for simpler code
+  reg    [31:0] result; // use reg for simpler code
 
   assign taken = eq ? result == 32'b0 : result != 32'b0;
 
