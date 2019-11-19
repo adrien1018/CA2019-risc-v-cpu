@@ -1,4 +1,4 @@
-MODULES = CPU.v Adder.v ALU_Control.v PC.v Instruction_Memory.v Registers.v Control.v Sign_Extend.v MUX32.v ALU.v
+MODULES = CPU.v Adder.v ALU_Control.v PC.v Instruction_Memory.v Registers.v Control.v Sign_Extend.v MUX32.v ALU.v Data_Memory.v
 VVP = testbench.vvp mytest.vvp
 
 all: $(VVP)

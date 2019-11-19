@@ -17,20 +17,21 @@ CPU CPU(
 );
 
 initial begin
-  // initialize instruction memory
+  // Initialize instruction memory
   for (i=0; i<256; i=i+1)
     CPU.Instruction_Memory.memory[i] = 32'b0;
-  // initialize Register File
+  // Initialize data memory
+  for (i=0; i<1024; i=i+1)
+    CPU.data_mem.memory[i] = 32'b0;
+  // Initialize register File
   for (i=0; i<32; i=i+1)
     CPU.Registers.register[i] = 32'b0;
-
   // Load instructions into instruction memory
   if ($value$plusargs("file=%s", file))
     $readmemb(file, CPU.Instruction_Memory.memory);
   else
     $readmemb("instruction.txt", CPU.Instruction_Memory.memory);
-
-  // rotate instruction memory to the correct position
+  // Rotate instruction memory to the correct position
   for (i=0; i<256; i=i+1)
     CPU.Instruction_Memory.memory[(i+2)&255] <= CPU.Instruction_Memory.memory[i];
 
@@ -41,7 +42,7 @@ initial begin
   #(`CYCLE_TIME/4)
   Reset = 1;
   Start = 1;
-  // set PC & registers to match `jupiter` results
+  // Set PC & registers to match `jupiter` results
   CPU.PC.pc_o = 65544;
   CPU.Registers.register[2] = 32'hbffffff0;
   CPU.Registers.register[3] = 32'h10008000;

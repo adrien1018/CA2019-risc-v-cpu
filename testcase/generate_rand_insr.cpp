@@ -8,13 +8,17 @@ const std::string s1[] = {"add", "sub", "or", "and", "mul",
 const std::string s2[] = {"addi", "xori", "ori", "andi"};
 const std::string s3[] = {"slli", "srli", "srai"};
 const std::string s4[] = {"beq", "bne", "blt", "bge", "bltu", "bgeu"};
+const std::string s5[] = {"lb", "lh", "lw", "lbu", "lhu", "sb", "sh", "sw"};
 
 const int Nregs = sizeof(regs) / sizeof(*regs);
 const int Ns1 = sizeof(s1) / sizeof(*s1);
 const int Ns2 = sizeof(s2) / sizeof(*s2);
 const int Ns3 = sizeof(s3) / sizeof(*s3);
 const int Ns4 = sizeof(s4) / sizeof(*s4);
+const int Ns5 = sizeof(s5) / sizeof(*s5);
 const int Range = 1 << 11;
+
+const int Ninsr = 200;
 
 int main(int argc, char** argv) {
   puts(".globl __start");
@@ -27,29 +31,34 @@ int main(int argc, char** argv) {
   for (int i = 0; i < Nregs; i++) {
     printf("addi %s, x0, %d\n", regs[i].c_str(), mrand(-Range, Range - 1)(gen));
   }
-  for (int i = 0; i < 128; i++) {
+  printf("addi sp, sp, -32\n");
+  for (int i = 0; i < Ninsr; i++) {
     printf("L%03d: ", i);
-    int c = mrand(0, Ns1 + Ns2 + Ns3 + Ns4 - 1)(gen);
-    if (c < Ns1) {
+    int c = mrand(0, 10)(gen);
+    if (c < 4) {
       printf("%s %s, %s, %s\n", s1[mrand(0, Ns1 - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str());
-    } else if (c < Ns1 + Ns2) {
+    } else if (c < 5) {
       printf("%s %s, %s, %d\n", s2[mrand(0, Ns2 - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
           mrand(-Range, Range - 1)(gen));
-    } else if (c < Ns1 + Ns2 + Ns3 || i >= 124) {
+    } else if (c < 6) {
       printf("%s %s, %s, %d\n", s3[mrand(0, Ns3 - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
           mrand(0, 31)(gen));
-    } else if (c < Ns1 + Ns2 + Ns3 + Ns4) {
+    } else if (c < 8 && i < Ninsr - 4) {
       printf("%s %s, %s, L%03d\n", s4[mrand(0, Ns4 - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
           i + mrand(2, 3)(gen));
+    } else if (c < 11) {
+      printf("%s %s, %d(sp)\n", s5[mrand(0, Ns5 - 1)(gen)].c_str(),
+          regs[mrand(0, Nregs - 1)(gen)].c_str(),
+          mrand(0, 20)(gen));
     }
   };
 }
