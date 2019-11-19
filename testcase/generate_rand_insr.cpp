@@ -37,9 +37,9 @@ int main(int argc, char** argv) {
     printf("addi %s, x0, %d\n", regs[i].c_str(), mrand(-Range, Range - 1)(gen));
   }
   printf("addi sp, sp, -32\n");
-  for (int i = 0; i < Ninsr; i++) {
+  for (int i = 0, flag = 0; i < Ninsr; i++, flag--) {
     printf("L%03d: ", i);
-    int c = mrand(0, 11)(gen);
+    int c = mrand(0, 12)(gen);
     if (c < 4) {
       printf("%s %s, %s, %s\n", s1[mrand(0, Ns1 - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
@@ -60,11 +60,24 @@ int main(int argc, char** argv) {
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
           i + mrand(2, 3)(gen));
-    } else if (c < 11) {
+    } else if (c < 9 && i < Ninsr - 4) {
+      if (mrand(0, 1)(gen) || flag > 0) {
+        printf("jal %s, L%03d\n",
+            regs[mrand(0, Nregs - 1)(gen)].c_str(),
+            i + mrand(2, 3)(gen));
+      } else {
+        int reg = mrand(1, Nregs - 1)(gen);
+        printf("auipc %s, 0\n", regs[reg].c_str());
+        printf("      jalr %s, %d(%s)\n",
+            regs[mrand(0, Nregs - 1)(gen)].c_str(),
+            mrand(3, 4)(gen) * 4, regs[reg].c_str());
+        flag = 4;
+      }
+    } else if (c < 12) {
       printf("%s %s, %d(sp)\n", s5[mrand(0, Ns5 - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
           mrand(0, 20)(gen));
-    } else if (c < 12) {
+    } else if (c < 13) {
       printf("%s %s, %d\n", s6[mrand(0, Ns6 - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
           mrand(0, 1048575)(gen));

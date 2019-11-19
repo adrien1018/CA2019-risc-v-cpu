@@ -35,11 +35,14 @@ module CPU (
   );
 
   // ----- Register read stage -----
-  wire [31:0] instruction_2 = instruction_1;
+  // . <-
   wire [31:0] reg_write_data_back2; // from stage 5
-  wire        reg_write_back2; // from stage 5
+  wire        reg_write_back2;      // from stage 5
+  // -> . ->
+  wire [31:0] instruction_2 = instruction_1;
   wire [31:0] now_pc_2 = now_pc_1;
   wire [31:0] advance_pc_2 = advance_pc_1;
+  // . ->
   wire [31:0] alu_1_opr_2;
   wire [31:0] alu_2_opr_2;
   wire [31:0] imm_2;
@@ -48,10 +51,12 @@ module CPU (
   wire        eq_2;
   wire        reg_write_2;
   wire        is_branch_2;
+  wire        is_jalr_2;
+  wire        is_jal_2;
   wire        mem_write_2;
   wire [1:0]  mem_width_2;
   wire        mem_sign_extend_2;
-  wire        load_mem_2;
+  wire [1:0]  reg_src_2;
   wire [31:0] reg_2_data_2;
 
   wire [31:0] reg_1_data;
@@ -78,10 +83,12 @@ module CPU (
     .alu_2_src       (alu_2_src),
     .reg_write       (reg_write_2),
     .is_branch       (is_branch_2),
+    .is_jalr         (is_jalr_2),
+    .is_jal          (is_jal_2),
     .mem_write       (mem_write_2),
     .mem_width       (mem_width_2),
     .mem_sign_extend (mem_sign_extend_2),
-    .load_mem        (load_mem_2)
+    .reg_src        (reg_src_2)
   );
 
   ALU_Control alu_ctrl_unit(
@@ -114,22 +121,26 @@ module CPU (
   );
 
   // ----- ALU stage -----
+  // -> .
+  wire [31:0] imm_3 = imm_2;
   wire [31:0] now_pc_3 = now_pc_2;
-  wire [31:0] advance_pc_3 = advance_pc_2;
   wire [31:0] alu_1_opr_3 = alu_1_opr_2;
   wire [31:0] alu_2_opr_3 = alu_2_opr_2;
-  wire [31:0] reg_2_data_3 = reg_2_data_2;
-  wire [31:0] imm_3 = imm_2;
   wire [3:0]  alu_op_3 = alu_op_2;
-  wire        flag_3 = flag_2;
   wire        eq_3 = eq_2;
   wire        is_branch_3 = is_branch_2;
+  wire        is_jalr_3 = is_jalr_2;
+  wire        is_jal_3 = is_jal_2;
+  wire        flag_3 = flag_2;
+  // -> . ->
+  wire [31:0] advance_pc_3 = advance_pc_2;
+  wire [31:0] reg_2_data_3 = reg_2_data_2;
   wire        reg_write_3 = reg_write_2;
   wire        mem_write_3 = mem_write_2;
   wire [1:0]  mem_width_3 = mem_width_2;
   wire        mem_sign_extend_3 = mem_sign_extend_2;
-  wire        load_mem_3 = load_mem_2;
-  // wire[31:0] taken_pc_3;
+  wire [1:0]  reg_src_3 = reg_src_2;
+  // . ->
   wire [31:0] alu_result_3;
 
   wire        taken;
@@ -151,21 +162,29 @@ module CPU (
     .taken   (taken)
   );
 
-  MUX32_2 mux_next_pc(
+  wire [1:0] next_pc_control = is_jalr_3 ? 2'b10 :
+                               is_jal_3 | (taken & is_branch_3) ? 2'b01 : 2'b00;
+  MUX32_4 mux_next_pc(
     .in0     (advance_pc_3),
     .in1     (branch_target),
-    .control (taken && is_branch_3),
+    .in2     (alu_result_3),
+    .in3     (), // not connected
+    .control (next_pc_control),
     .result  (next_pc_back1)
   );
 
   // ----- Data write stage -----
+  // -> .
+  wire [31:0] advance_pc_4 = advance_pc_3;
   wire [31:0] alu_result_4 = alu_result_3;
   wire [31:0] reg_2_data_4 = reg_2_data_3;
   wire        reg_write_4 = reg_write_3;
-  wire        mem_write_4 = mem_write_3;
   wire [1:0]  mem_width_4 = mem_width_3;
   wire        mem_sign_extend_4 = mem_sign_extend_3;
-  wire        load_mem_4 = load_mem_3;
+  wire [1:0]  reg_src_4 = reg_src_3;
+  // -> . ->
+  wire        mem_write_4 = mem_write_3;
+  // . ->
   wire [31:0] reg_write_data_4;
 
   wire [31:0] mem_data;
@@ -180,14 +199,17 @@ module CPU (
     .result      (mem_data)
   );
 
-  MUX32_2 mux_reg_write_data(
+  MUX32_4 mux_reg_write_data(
     .in0     (alu_result_4),
     .in1     (mem_data),
-    .control (load_mem_4),
+    .in2     (advance_pc_4),
+    .in3     (), // not connected
+    .control (reg_src_4),
     .result  (reg_write_data_4)
   );
 
   // ----- Register write stage -----
+  // -> . (<-)
   wire [31:0] reg_write_data_5 = reg_write_data_4;
   wire        reg_write_5 = reg_write_4;
 
