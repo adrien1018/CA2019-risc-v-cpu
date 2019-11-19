@@ -20,9 +20,6 @@ initial begin
   // Initialize instruction memory
   for (i=0; i<256; i=i+1)
     CPU.Instruction_Memory.memory[i] = 32'b0;
-  // Initialize data memory
-  for (i=0; i<1024; i=i+1)
-    CPU.data_mem.memory[i] = 32'b0;
   // Initialize register File
   for (i=0; i<32; i=i+1)
     CPU.Registers.register[i] = 32'b0;
