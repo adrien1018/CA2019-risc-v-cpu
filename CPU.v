@@ -55,6 +55,7 @@ module CPU (
   wire [31:0] reg_2_data_2;
 
   wire [31:0] reg_1_data;
+  wire [1:0]  alu_1_src;
   wire        alu_2_src;
   wire [1:0]  alu_control;
 
@@ -73,6 +74,7 @@ module CPU (
     .opcode          (instruction_2[6:0]),
     .funct3          (instruction_2[14:12]),
     .alu_control     (alu_control),
+    .alu_1_src       (alu_1_src),
     .alu_2_src       (alu_2_src),
     .reg_write       (reg_write_2),
     .is_branch       (is_branch_2),
@@ -95,7 +97,14 @@ module CPU (
     .result (imm_2)
   );
 
-  assign alu_1_opr_2 = reg_1_data;
+  MUX32_4 mux_alu_1_opr (
+    .in0     (reg_1_data),
+    .in1     (32'b0),
+    .in2     (now_pc_1),
+    .in3     (), // not connected
+    .control (alu_1_src),
+    .result  (alu_1_opr_2)
+  );
 
   MUX32_2 mux_alu_2_opr (
     .in0     (reg_2_data_2),

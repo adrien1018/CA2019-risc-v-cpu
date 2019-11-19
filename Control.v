@@ -2,6 +2,7 @@ module Control (
   opcode,
   funct3,
   alu_control,
+  alu_1_src,
   alu_2_src,
   reg_write,
   is_branch,
@@ -14,6 +15,7 @@ module Control (
   input  [6:0] opcode; // instruction[6:0]
   input  [2:0] funct3; // instruction[14:12]
   output [1:0] alu_control;
+  output [1:0] alu_1_src; // 10 if PC, 01 if zero, 00 if register
   output       alu_2_src; // 1 if immediate, 0 if register
   output       reg_write;
   output       is_branch;
@@ -25,7 +27,10 @@ module Control (
   assign alu_control = opcode == 7'b0010011 ? 2'b10 :
                        opcode == 7'b0110011 ? 2'b11 :
                        opcode == 7'b1100011 ? 2'b01 : 2'b00;
-  assign alu_2_src = opcode != 7'b0110011 && opcode != 7'b1100011;
+  assign alu_1_src = opcode == 7'b0110111 ? 2'b01 : // LUI
+                     opcode == 7'b0010111 ? 2'b10 /* AUIPC */ : 2'b00;
+  assign alu_2_src = opcode != 7'b0110011 && // register arithmetic
+                     opcode != 7'b1100011;   // branch
   assign reg_write = opcode[5:2] != 4'b1000; // store/branch does not write registers
   assign is_branch = opcode == 7'b1100011;
   assign mem_write = opcode == 7'b0100011;
