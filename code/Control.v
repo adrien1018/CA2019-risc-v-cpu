@@ -29,8 +29,7 @@ module Control (
   output [1:0] reg_src; // 10 if next PC, 01 if memory, 00 if ALU result
 
   assign alu_control = opcode == 7'b0010011 ? 2'b10 :
-                       opcode == 7'b0110011 ? 2'b11 :
-                       opcode == 7'b1100011 ? 2'b01 : 2'b00;
+                       opcode == 7'b0110011 ? 2'b11 : 2'b00;
   assign alu_1_src = opcode == 7'b0110111 ? 2'b01 : // LUI
                      opcode == 7'b0010111 ? 2'b10 /* AUIPC */ : 2'b00;
   assign alu_2_src = opcode != 7'b0110011 && // register arithmetic

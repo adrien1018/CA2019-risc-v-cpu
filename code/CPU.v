@@ -10,16 +10,20 @@ module CPU (
   input start_i;
 
   // ----- Instruction fetch stage -----
-  wire [31:0] next_pc_back1; // from stage 3
+  wire [31:0] next_pc_back1_2; // from stage 2
+  wire [31:0] next_pc_back1_3; // from stage 3 (indir branch)
+  wire        next_pc_control_back1; // from stage 2
   wire [31:0] now_pc_1;
   wire [31:0] advance_pc_1;
   wire [31:0] instruction_1;
+
+  wire [31:0] next_pc;
 
   PC PC(
     .clk_i   (clk_i),
     .rst_i   (rst_i),
     .start_i (start_i),
-    .pc_i    (next_pc_back1),
+    .pc_i    (next_pc),
     .pc_o    (now_pc_1)
   );
 
@@ -32,6 +36,13 @@ module CPU (
   Instruction_Memory Instruction_Memory(
     .addr_i  (now_pc_1),
     .instr_o (instruction_1)
+  );
+
+  MUX32_2 mux_next_pc(
+    .in0     (next_pc_back1_2),
+    .in1     (next_pc_back1_3),
+    .control (next_pc_control_back1),
+    .result  (next_pc)
   );
 
   // ----- Register read stage -----
@@ -48,21 +59,22 @@ module CPU (
   wire [31:0] imm_2;
   wire [3:0]  alu_op_2;
   wire        flag_2;
-  wire        eq_2;
   wire        reg_write_2;
-  wire        is_branch_2;
   wire        is_jalr_2;
-  wire        is_jal_2;
   wire        mem_write_2;
   wire [1:0]  mem_width_2;
   wire        mem_sign_extend_2;
   wire [1:0]  reg_src_2;
   wire [31:0] reg_2_data_2;
 
+  wire [31:0] branch_target;
   wire [31:0] reg_1_data;
   wire [1:0]  alu_1_src;
   wire        alu_2_src;
   wire [1:0]  alu_control;
+  wire        taken;
+  wire        is_branch;
+  wire        is_jal;
 
   Registers Registers(
     .clk_i      (clk_i),
@@ -75,6 +87,13 @@ module CPU (
     .RS2data_o  (reg_2_data_2)
   );
 
+  BranchDecision branch_dec(
+    .opr_1 (reg_1_data),
+    .opr_2 (reg_2_data_2),
+    .op    (instruction_2[14:12]),
+    .taken (taken)
+  );
+
   Control control(
     .opcode          (instruction_2[6:0]),
     .funct3          (instruction_2[14:12]),
@@ -82,21 +101,20 @@ module CPU (
     .alu_1_src       (alu_1_src),
     .alu_2_src       (alu_2_src),
     .reg_write       (reg_write_2),
-    .is_branch       (is_branch_2),
+    .is_branch       (is_branch),
     .is_jalr         (is_jalr_2),
-    .is_jal          (is_jal_2),
+    .is_jal          (is_jal),
     .mem_write       (mem_write_2),
     .mem_width       (mem_width_2),
     .mem_sign_extend (mem_sign_extend_2),
-    .reg_src        (reg_src_2)
+    .reg_src         (reg_src_2)
   );
 
   ALU_Control alu_ctrl_unit(
     .ins     ({instruction_2[30], instruction_2[25], instruction_2[14:12]}),
     .control (alu_control),
     .alu_op  (alu_op_2),
-    .flag    (flag_2),
-    .eq      (eq_2)
+    .flag    (flag_2)
   );
 
   Immediate_Gen imm_gen(
@@ -120,6 +138,21 @@ module CPU (
     .result  (alu_2_opr_2)
   );
 
+  Adder branch_dest_adder(
+    .opr_1  (now_pc_2),
+    .opr_2  (imm_2),
+    .result (branch_target)
+  );
+
+  MUX32_2 mux_next_pc_2(
+    .in0     (advance_pc_2),
+    .in1     (branch_target),
+    .control (is_jal | (taken & is_branch)),
+    .result  (next_pc_back1_2)
+  );
+
+  assign next_pc_control_back1 = is_jalr_2;
+
   // ----- ALU stage -----
   // -> .
   wire [31:0] imm_3 = imm_2;
@@ -127,10 +160,7 @@ module CPU (
   wire [31:0] alu_1_opr_3 = alu_1_opr_2;
   wire [31:0] alu_2_opr_3 = alu_2_opr_2;
   wire [3:0]  alu_op_3 = alu_op_2;
-  wire        eq_3 = eq_2;
-  wire        is_branch_3 = is_branch_2;
   wire        is_jalr_3 = is_jalr_2;
-  wire        is_jal_3 = is_jal_2;
   wire        flag_3 = flag_2;
   // -> . ->
   wire [31:0] advance_pc_3 = advance_pc_2;
@@ -143,35 +173,15 @@ module CPU (
   // . ->
   wire [31:0] alu_result_3;
 
-  wire        taken;
-  wire [31:0] branch_target;
-
-  Adder branch_dest_adder(
-    .opr_1  (now_pc_3),
-    .opr_2  (imm_3),
-    .result (branch_target)
-  );
-
   ALU alu(
     .opr_1   (alu_1_opr_3),
     .opr_2   (alu_2_opr_3),
     .alu_op  (alu_op_3),
     .flag    (flag_3),
-    .eq      (eq_3),
-    .result  (alu_result_3),
-    .taken   (taken)
+    .result  (alu_result_3)
   );
 
-  wire [1:0] next_pc_control = is_jalr_3 ? 2'b10 :
-                               is_jal_3 | (taken & is_branch_3) ? 2'b01 : 2'b00;
-  MUX32_4 mux_next_pc(
-    .in0     (advance_pc_3),
-    .in1     (branch_target),
-    .in2     (alu_result_3),
-    .in3     (32'hXXXXXXXX),
-    .control (next_pc_control),
-    .result  (next_pc_back1)
-  );
+  assign next_pc_back1_3 = alu_result_3;
 
   // ----- Data write stage -----
   // -> .
