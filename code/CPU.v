@@ -49,18 +49,17 @@ module CPU (
   // . <-
   wire [31:0] reg_write_data_back2; // from stage 5
   wire        reg_write_back2;      // from stage 5
+  // -> .
+  wire [31:0] now_pc_2 = now_pc_1;
   // -> . ->
   wire [31:0] instruction_2 = instruction_1;
-  wire [31:0] now_pc_2 = now_pc_1;
   wire [31:0] advance_pc_2 = advance_pc_1;
   // . ->
   wire [31:0] alu_1_opr_2;
   wire [31:0] alu_2_opr_2;
-  wire [31:0] imm_2;
   wire [3:0]  alu_op_2;
-  wire        flag_2;
+  wire        alu_flag_2;
   wire        reg_write_2;
-  wire        is_jalr_2;
   wire        mem_write_2;
   wire [1:0]  mem_width_2;
   wire        mem_sign_extend_2;
@@ -68,6 +67,7 @@ module CPU (
   wire [31:0] reg_2_data_2;
 
   wire [31:0] branch_target;
+  wire [31:0] imm;
   wire [31:0] reg_1_data;
   wire [1:0]  alu_1_src;
   wire        alu_2_src;
@@ -75,6 +75,7 @@ module CPU (
   wire        taken;
   wire        is_branch;
   wire        is_jal;
+  wire        is_jalr;
 
   Registers Registers(
     .clk_i      (clk_i),
@@ -97,29 +98,24 @@ module CPU (
   Control control(
     .opcode          (instruction_2[6:0]),
     .funct3          (instruction_2[14:12]),
-    .alu_control     (alu_control),
+    .funct7          (instruction_2[31:25]),
     .alu_1_src       (alu_1_src),
     .alu_2_src       (alu_2_src),
     .reg_write       (reg_write_2),
     .is_branch       (is_branch),
-    .is_jalr         (is_jalr_2),
+    .is_jalr         (is_jalr),
     .is_jal          (is_jal),
     .mem_write       (mem_write_2),
     .mem_width       (mem_width_2),
     .mem_sign_extend (mem_sign_extend_2),
-    .reg_src         (reg_src_2)
-  );
-
-  ALU_Control alu_ctrl_unit(
-    .ins     ({instruction_2[30], instruction_2[25], instruction_2[14:12]}),
-    .control (alu_control),
-    .alu_op  (alu_op_2),
-    .flag    (flag_2)
+    .reg_src         (reg_src_2),
+    .alu_op          (alu_op_2),
+    .alu_flag        (alu_flag_2)
   );
 
   Immediate_Gen imm_gen(
     .insr   (instruction_2),
-    .result (imm_2)
+    .result (imm)
   );
 
   MUX32_4 mux_alu_1_opr (
@@ -133,14 +129,14 @@ module CPU (
 
   MUX32_2 mux_alu_2_opr (
     .in0     (reg_2_data_2),
-    .in1     (imm_2),
+    .in1     (imm),
     .control (alu_2_src),
     .result  (alu_2_opr_2)
   );
 
   Adder branch_dest_adder(
     .opr_1  (now_pc_2),
-    .opr_2  (imm_2),
+    .opr_2  (imm),
     .result (branch_target)
   );
 
@@ -151,17 +147,14 @@ module CPU (
     .result  (next_pc_back1_2)
   );
 
-  assign next_pc_control_back1 = is_jalr_2;
+  assign next_pc_control_back1 = is_jalr;
 
   // ----- ALU stage -----
   // -> .
-  wire [31:0] imm_3 = imm_2;
-  wire [31:0] now_pc_3 = now_pc_2;
   wire [31:0] alu_1_opr_3 = alu_1_opr_2;
   wire [31:0] alu_2_opr_3 = alu_2_opr_2;
   wire [3:0]  alu_op_3 = alu_op_2;
-  wire        is_jalr_3 = is_jalr_2;
-  wire        flag_3 = flag_2;
+  wire        alu_flag_3 = alu_flag_2;
   // -> . ->
   wire [31:0] advance_pc_3 = advance_pc_2;
   wire [31:0] reg_2_data_3 = reg_2_data_2;
@@ -177,7 +170,7 @@ module CPU (
     .opr_1   (alu_1_opr_3),
     .opr_2   (alu_2_opr_3),
     .alu_op  (alu_op_3),
-    .flag    (flag_3),
+    .flag    (alu_flag_3),
     .result  (alu_result_3)
   );
 
