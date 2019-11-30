@@ -16,18 +16,55 @@ CPU CPU(
 );
   
 initial begin
+
+    $dumpfile("CPU.vcd");
+    $dumpvars;
+
     counter = 0;
     
     // initialize instruction memory
     for(i=0; i<256; i=i+1) begin
         CPU.Instruction_Memory.memory[i] = 32'b0;
     end
-    
         
     // initialize Register File
     for(i=0; i<32; i=i+1) begin
         CPU.Registers.register[i] = 32'b0;
     end
+
+    // initialize pipeline registers
+    CPU.if_id.now_pc_o = 32'b0;
+    CPU.if_id.inst_o = 32'b0;
+    CPU.if_id.advance_pc_o = 32'b0;
+
+    CPU.id_ex.alu_1_opr_o = 32'b0;
+    CPU.id_ex.alu_2_opr_o = 32'b0;
+    CPU.id_ex.alu_op_o = 4'b0;
+    CPU.id_ex.alu_flag_o = 0;
+    CPU.id_ex.advance_pc_o = 32'b0;
+    CPU.id_ex.reg_2_data_o = 32'b0;
+    CPU.id_ex.reg_write_o = 0;
+    CPU.id_ex.reg_write_data_addr_o = 5'b0;
+    CPU.id_ex.mem_write_o = 0;
+    CPU.id_ex.mem_width_o = 2'b0;
+    CPU.id_ex.mem_sign_extend_o = 0;
+    CPU.id_ex.reg_src_o = 2'b0;
+
+    CPU.ex_mem.advance_pc_o = 32'b0;
+    CPU.ex_mem.alu_result_o = 32'b0;
+    CPU.ex_mem.reg_2_data_o = 32'b0;
+    CPU.ex_mem.reg_write_o = 0;
+    CPU.ex_mem.reg_write_data_addr_o = 5'b0;
+    CPU.ex_mem.mem_width_o = 2'b0;
+    CPU.ex_mem.mem_sign_extend_o = 0;
+    CPU.ex_mem.reg_src_o = 2'b0;
+    CPU.ex_mem.mem_write_o = 0;
+    CPU.ex_mem.is_reg1_o = 0;
+    CPU.ex_mem.alu_2_src_o = 0;
+
+    CPU.mem_wb.reg_write_data_o = 32'b0;
+    CPU.mem_wb.reg_write_o = 0;
+    CPU.mem_wb.reg_write_data_addr_o = 5'b0;
     
     // Load instructions into instruction memory
     $readmemb("instruction.txt", CPU.Instruction_Memory.memory);
@@ -42,8 +79,6 @@ initial begin
     #(`CYCLE_TIME/4) 
     Reset = 1;
     Start = 1;
-        
-    
 end
   
 always@(posedge Clk) begin
