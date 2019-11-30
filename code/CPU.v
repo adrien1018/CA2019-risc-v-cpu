@@ -75,11 +75,17 @@ module CPU (
   wire [1:0]  reg_src_2;
   wire [31:0] reg_2_data_2;
 
+  wire [31:0] reg_2_data_2_file;
+  wire [31:0] reg_2_data_2_forward = reg_2_data_2_file; //TODO
+  wire        reg_2_data_2_src = 0; //TODO
   wire [31:0] branch_target;
   wire [31:0] imm;
   wire [31:0] reg_1_data;
+  wire [31:0] reg_1_data_file;
+  wire [31:0] reg_1_data_forward = reg_1_data_file; //TODO
+  wire        reg_1_data_src = 0; //TODO
   wire [1:0]  alu_1_src;
-  wire        alu_2_src;
+  wire        alu_2_src_2;
   wire [1:0]  alu_control;
   wire        taken;
   wire        is_branch;
@@ -108,8 +114,22 @@ module CPU (
     .RDaddr_i   (instruction_2[11:7]),
     .RDdata_i   (reg_write_data_back2),
     .RegWrite_i (reg_write_back2),
-    .RS1data_o  (reg_1_data),
-    .RS2data_o  (reg_2_data_2)
+    .RS1data_o  (reg_1_data_file),
+    .RS2data_o  (reg_2_data_2_file)
+  );
+
+  MUX32_2 mux_reg_2_data_2 (
+    .in0     (reg_2_data_2_file),
+    .in1     (reg_2_data_2_forward),
+    .control (reg_2_data_2_src),
+    .result  (reg_2_data_2)
+  );
+
+  MUX32_2 mux_reg_1_data (
+    .in0     (reg_1_data_file),
+    .in1     (reg_1_data_forward),
+    .control (reg_1_data_src),
+    .result  (reg_1_data)
   );
 
   BranchDecision branch_dec(
@@ -124,7 +144,7 @@ module CPU (
     .funct3          (instruction_2[14:12]),
     .funct7          (instruction_2[31:25]),
     .alu_1_src       (alu_1_src),
-    .alu_2_src       (alu_2_src),
+    .alu_2_src       (alu_2_src_2),
     .reg_write       (reg_write_2),
     .is_branch       (is_branch),
     .is_jalr         (is_jalr),
@@ -154,7 +174,7 @@ module CPU (
   MUX32_2 mux_alu_2_opr (
     .in0     (reg_2_data_2),
     .in1     (imm),
-    .control (alu_2_src),
+    .control (alu_2_src_2),
     .result  (alu_2_opr_2)
   );
 
@@ -169,13 +189,18 @@ module CPU (
 
   // ----- ALU stage -----
   // -> .
-  wire [31:0] alu_1_opr_3;
-  wire [31:0] alu_2_opr_3;
+  wire [31:0] alu_1_opr_3_flow;
+  wire [31:0] alu_2_opr_3_flow;
   wire [3:0]  alu_op_3;
   wire        alu_flag_3;
+  wire        alu_2_src_3;
+  wire        is_reg1;
   // -> . ->
   wire [31:0] advance_pc_3;
   wire [31:0] reg_2_data_3;
+  wire [31:0] reg_2_data_3_flow;
+  wire [31:0] reg_2_data_3_forward = reg_2_data_3_flow; //TODO
+  wire        reg_2_data_3_src = 0; //TODO
   wire        reg_write_3;
   wire        mem_write_3;
   wire [1:0]  mem_width_3;
@@ -183,6 +208,34 @@ module CPU (
   wire [1:0]  reg_src_3;
   // . ->
   wire [31:0] alu_result_3;
+
+  wire [31:0] alu_1_opr_3;
+  wire [31:0] alu_2_opr_3;
+  wire        alu_1_opr_3_src = is_reg1 & 0; //TODO: forward
+  wire        alu_2_opr_3_src = !(alu_2_src_3) & 0; //TODO: forward
+  wire [31:0] alu_1_opr_3_forward = alu_1_opr_3_flow; //TODO
+  wire [31:0] alu_2_opr_3_forward = alu_2_opr_3_flow; //TODO
+
+  MUX32_2 mux_alu_1_opr_3 (
+    .in0     (alu_1_opr_3_flow),
+    .in1     (alu_1_opr_3_forward),
+    .control (alu_1_opr_3_src),
+    .result  (alu_1_opr_3)
+  );
+
+  MUX32_2 mux_alu_2_opr_3 (
+    .in0     (alu_2_opr_3_flow),
+    .in1     (alu_2_opr_3_forward),
+    .control (alu_2_opr_3_src),
+    .result  (alu_2_opr_3)
+  );
+
+  MUX32_2 mux_reg_2_data_3 (
+    .in0     (reg_2_data_3_flow),
+    .in1     (reg_2_data_3_forward),
+    .control (reg_2_data_3_src),
+    .result  (reg_2_data_3)
+  );
 
   ALU alu(
     .opr_1   (alu_1_opr_3),
@@ -249,7 +302,7 @@ module CPU (
   );
 
   // ----- ID/EX -----
-  ID_EX id_dx(
+  ID_EX id_ex(
     .clk               (clk_i),
     .alu_1_opr_i       (alu_1_opr_2),
     .alu_2_opr_i       (alu_2_opr_2),
@@ -262,12 +315,12 @@ module CPU (
     .mem_width_i       (mem_width_2),
     .mem_sign_extend_i (mem_sign_extend_2),
     .reg_src_i         (reg_src_2),
-    .alu_1_opr_o       (alu_1_opr_3),
-    .alu_2_opr_o       (alu_2_opr_3),
+    .alu_1_opr_o       (alu_1_opr_3_flow),
+    .alu_2_opr_o       (alu_2_opr_3_flow),
     .alu_op_o          (alu_op_3),
     .alu_flag_o        (alu_flag_3),
     .advance_pc_o      (advance_pc_3),
-    .reg_2_data_o      (reg_2_data_3),
+    .reg_2_data_o      (reg_2_data_3_flow),
     .reg_write_o       (reg_write_3),
     .mem_write_o       (mem_write_3),
     .mem_width_o       (mem_width_3),
@@ -286,6 +339,8 @@ module CPU (
     .mem_sign_extend_i  (mem_sign_extend_3),
     .reg_src_i          (reg_src_3),
     .mem_write_i        (mem_write_3),
+    .alu_1_src_i        (alu_1_src),
+    .alu_2_src_i        (alu_2_src_2),
     .advance_pc_o       (advance_pc_4),
     .alu_result_o       (alu_result_4),
     .reg_2_data_o       (reg_2_data_4),
@@ -293,7 +348,9 @@ module CPU (
     .mem_width_o        (mem_width_4),
     .mem_sign_extend_o  (mem_sign_extend_4),
     .reg_src_o          (reg_src_4),
-    .mem_write_o        (mem_write_4)
+    .mem_write_o        (mem_write_4),
+    .is_reg1_o          (is_reg1),
+    .alu_2_src_o        (alu_2_src_3)
   );
 
   // ----- MEM/WB -----
