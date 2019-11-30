@@ -27,8 +27,10 @@ module Registers (
   end
 
   // Read Data
-  assign RS1data_o = register[RS1addr_i];
-  assign RS2data_o = register[RS2addr_i];
+  assign RS1data_o = (RS1addr_i == RDaddr_i && RegWrite_i && RDaddr_i != 5'b0)?
+		     RDdata_i : register[RS1addr_i];
+  assign RS2data_o = (RS2addr_i == RDaddr_i && RegWrite_i && RDaddr_i != 5'b0)?
+		     RDdata_i : register[RS2addr_i];
 
   // Write Data
   always @(posedge clk_i) begin
