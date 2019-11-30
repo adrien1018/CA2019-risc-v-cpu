@@ -21,10 +21,15 @@ initial begin
     $dumpvars;
 
     counter = 0;
-    
+
     // initialize instruction memory
     for(i=0; i<256; i=i+1) begin
         CPU.Instruction_Memory.memory[i] = 32'b0;
+    end
+
+    // initialize data memory
+    for(i=0; i<1024; i=i+1) begin
+        CPU.data_mem.memory[i] = 32'b0;
     end
         
     // initialize Register File
@@ -98,10 +103,21 @@ always@(posedge Clk) begin
     $fdisplay(outfile, "R5(a1) = %d, R13(t5) = %d, R21(s5) = %d, R29(sp) = %d", CPU.Registers.register[5], CPU.Registers.register[13], CPU.Registers.register[21], CPU.Registers.register[29]);
     $fdisplay(outfile, "R6(a2) = %d, R14(t6) = %d, R22(s6) = %d, R30(s8) = %d", CPU.Registers.register[6], CPU.Registers.register[14], CPU.Registers.register[22], CPU.Registers.register[30]);
     $fdisplay(outfile, "R7(a3) = %d, R15(t7) = %d, R23(s7) = %d, R31(ra) = %d", CPU.Registers.register[7], CPU.Registers.register[15], CPU.Registers.register[23], CPU.Registers.register[31]);
-    
+
+    // print Data Memory
+    $fdisplay(outfile, "Data Memory: 0x00 = %10d", {CPU.data_mem.memory[3] , CPU.data_mem.memory[2] , CPU.data_mem.memory[1] , CPU.data_mem.memory[0] });
+    $fdisplay(outfile, "Data Memory: 0x04 = %10d", {CPU.data_mem.memory[7] , CPU.data_mem.memory[6] , CPU.data_mem.memory[5] , CPU.data_mem.memory[4] });
+    $fdisplay(outfile, "Data Memory: 0x08 = %10d", {CPU.data_mem.memory[11], CPU.data_mem.memory[10], CPU.data_mem.memory[9] , CPU.data_mem.memory[8] });
+    $fdisplay(outfile, "Data Memory: 0x0c = %10d", {CPU.data_mem.memory[15], CPU.data_mem.memory[14], CPU.data_mem.memory[13], CPU.data_mem.memory[12]});
+    $fdisplay(outfile, "Data Memory: 0x10 = %10d", {CPU.data_mem.memory[19], CPU.data_mem.memory[18], CPU.data_mem.memory[17], CPU.data_mem.memory[16]});
+    $fdisplay(outfile, "Data Memory: 0x14 = %10d", {CPU.data_mem.memory[23], CPU.data_mem.memory[22], CPU.data_mem.memory[21], CPU.data_mem.memory[20]});
+    $fdisplay(outfile, "Data Memory: 0x18 = %10d", {CPU.data_mem.memory[27], CPU.data_mem.memory[26], CPU.data_mem.memory[25], CPU.data_mem.memory[24]});
+    $fdisplay(outfile, "Data Memory: 0x1c = %10d", {CPU.data_mem.memory[31], CPU.data_mem.memory[30], CPU.data_mem.memory[29], CPU.data_mem.memory[28]});
+
     $fdisplay(outfile, "\n");
-    
+
     counter = counter + 1;
+
 end
 
   
