@@ -41,13 +41,13 @@ initial begin
     CPU.if_id.now_pc_o = 32'b0;
     CPU.if_id.inst_o = 32'b10011; // NOP
 
-    CPU.id_ex.reg_write_o = 1'b0;
+    CPU.id_ex.reg_write_data_addr_o = 5'b0;
     CPU.id_ex.mem_write_o = 1'b0;
 
-    CPU.ex_mem.reg_write_o = 1'b0;
+    CPU.ex_mem.reg_write_data_addr_o = 5'b0;
     CPU.ex_mem.mem_write_o = 1'b0;
 
-    CPU.mem_wb.reg_write_o = 1'b0;
+    CPU.mem_wb.reg_write_data_addr_o = 5'b0;
 
     // Load instructions into instruction memory
     $readmemb("instruction.txt", CPU.Instruction_Memory.memory);

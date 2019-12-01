@@ -61,7 +61,6 @@ module CPU (
   // ----- Register read stage -----
   // . <-
   wire [31:0] reg_write_data_back2; // from stage 5
-  wire        reg_write_back2;      // from stage 5
   wire [4:0]  reg_write_addr_back2; // from stage 5
   // -> .
   wire [31:0] now_pc_2;
@@ -74,8 +73,7 @@ module CPU (
   wire [31:0] alu_2_opr_2;
   wire [3:0]  alu_op_2;
   wire        alu_flag_2;
-  wire        reg_write_2;
-  wire [4:0]  reg_write_data_addr_2 = instruction_2[11:7];
+  wire [4:0]  reg_write_data_addr_2;
   wire        mem_write_2;
   wire [1:0]  mem_width_2;
   wire        mem_sign_extend_2;
@@ -94,11 +92,12 @@ module CPU (
   wire [1:0]  alu_1_src;
   wire        alu_2_src_2;
   wire [1:0]  alu_control;
+  wire        reg_write;
   wire        is_nop = 0;
 
   MUX32_2 mux_inst_or_nop(
     .in0     (instruction_2_a),
-    .in1     (32'b0),
+    .in1     (32'b10011), // NOP
     .control (is_nop),
     .result  (instruction_2)
   );
@@ -109,7 +108,7 @@ module CPU (
     .RS2addr_i  (instruction_2[24:20]),
     .RDaddr_i   (reg_write_addr_back2),
     .RDdata_i   (reg_write_data_back2),
-    .RegWrite_i (reg_write_back2),
+    .RegWrite_i (1'b1),
     .RS1data_o  (reg_1_data_file),
     .RS2data_o  (reg_2_data_2_file)
   );
@@ -141,7 +140,7 @@ module CPU (
     .funct7          (instruction_2[31:25]),
     .alu_1_src       (alu_1_src),
     .alu_2_src       (alu_2_src_2),
-    .reg_write       (reg_write_2),
+    .reg_write       (reg_write),
     .is_branch       (is_branch),
     .is_jalr         (is_jalr),
     .is_jal          (is_jal),
@@ -152,6 +151,8 @@ module CPU (
     .alu_op          (alu_op_2),
     .alu_flag        (alu_flag_2)
   );
+
+  assign reg_write_data_addr_2 = reg_write ? instruction_2[11:7] : 5'b0;
 
   Immediate_Gen imm_gen(
     .insr   (instruction_2),
@@ -197,7 +198,6 @@ module CPU (
   wire [31:0] reg_2_data_3_flow;
   wire [31:0] reg_2_data_3_forward = reg_2_data_3_flow; //TODO
   wire        reg_2_data_3_src = 0; //TODO
-  wire        reg_write_3;
   wire [4:0]  reg_write_data_addr_3;
   wire        mem_write_3;
   wire [1:0]  mem_width_3;
@@ -249,7 +249,6 @@ module CPU (
   wire [31:0] advance_pc_4;
   wire [31:0] alu_result_4;
   wire [31:0] reg_2_data_4;
-  wire        reg_write_4;
   wire [4:0]  reg_write_data_addr_4;
   wire [1:0]  mem_width_4;
   wire        mem_sign_extend_4;
@@ -283,11 +282,9 @@ module CPU (
   // ----- Register write stage -----
   // -> . (<-)
   wire [31:0] reg_write_data_5;
-  wire        reg_write_5;
   wire [4:0]  reg_write_data_addr_5;
 
   assign reg_write_data_back2 = reg_write_data_5;
-  assign reg_write_back2 = reg_write_5;
   assign reg_write_addr_back2 = reg_write_data_addr_5;
 
   // ----- IF/ID -----
@@ -310,7 +307,6 @@ module CPU (
     .alu_flag_i            (alu_flag_2),
     .advance_pc_i          (advance_pc_2),
     .reg_2_data_i          (reg_2_data_2),
-    .reg_write_i           (reg_write_2),
     .reg_write_data_addr_i (reg_write_data_addr_2),
     .mem_write_i           (mem_write_2),
     .mem_width_i           (mem_width_2),
@@ -322,7 +318,6 @@ module CPU (
     .alu_flag_o            (alu_flag_3),
     .advance_pc_o          (advance_pc_3),
     .reg_2_data_o          (reg_2_data_3_flow),
-    .reg_write_o           (reg_write_3),
     .reg_write_data_addr_o (reg_write_data_addr_3),
     .mem_write_o           (mem_write_3),
     .mem_width_o           (mem_width_3),
@@ -336,7 +331,6 @@ module CPU (
     .advance_pc_i          (advance_pc_3),
     .alu_result_i          (alu_result_3),
     .reg_2_data_i          (reg_2_data_3),
-    .reg_write_i           (reg_write_3),
     .reg_write_data_addr_i (reg_write_data_addr_3),
     .mem_width_i           (mem_width_3),
     .mem_sign_extend_i     (mem_sign_extend_3),
@@ -347,7 +341,6 @@ module CPU (
     .advance_pc_o          (advance_pc_4),
     .alu_result_o          (alu_result_4),
     .reg_2_data_o          (reg_2_data_4),
-    .reg_write_o           (reg_write_4),
     .reg_write_data_addr_o (reg_write_data_addr_4),
     .mem_width_o           (mem_width_4),
     .mem_sign_extend_o     (mem_sign_extend_4),
@@ -362,10 +355,8 @@ module CPU (
     .clk                   (clk_i),
     .reg_write_data_i      (reg_write_data_4),
     .reg_write_data_addr_i (reg_write_data_addr_4),
-    .reg_write_i           (reg_write_4),
     .reg_write_data_o      (reg_write_data_5),
-    .reg_write_data_addr_o (reg_write_data_addr_5),
-    .reg_write_o           (reg_write_5)
+    .reg_write_data_addr_o (reg_write_data_addr_5)
   );
 
 endmodule
