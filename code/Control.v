@@ -1,39 +1,22 @@
 `include "Opcode.v"
 
 module Control (
-  opcode,
-  funct3,
-  funct7,
-  alu_1_src,
-  alu_2_src,
-  reg_write,
-  is_branch,
-  is_jalr,
-  is_jal,
-  mem_write,
-  mem_width,
-  mem_sign_extend,
-  reg_src,
-  alu_op,
-  alu_flag
+  input  [6:0] opcode, // instruction[6:0]
+  input  [2:0] funct3, // instruction[14:12]
+  input  [6:0] funct7, // instruction[31:25]
+  output [1:0] alu_1_src, // 10 if PC, 01 if zero, 00 if register
+  output       alu_2_src, // 1 if immediate, 0 if register
+  output       reg_write,
+  output       is_branch,
+  output       is_jalr,
+  output       is_jal,
+  output       mem_write,
+  output [1:0] mem_width,
+  output       mem_sign_extend,
+  output [1:0] reg_src, // 10 if next PC, 01 if memory, 00 if ALU result
+  output [3:0] alu_op,
+  output       alu_flag
 );
-
-  input  [6:0] opcode; // instruction[6:0]
-  input  [2:0] funct3; // instruction[14:12]
-  input  [6:0] funct7; // instruction[31:25]
-  output [1:0] alu_control;
-  output [1:0] alu_1_src; // 10 if PC, 01 if zero, 00 if register
-  output       alu_2_src; // 1 if immediate, 0 if register
-  output       reg_write;
-  output       is_branch;
-  output       is_jalr;
-  output       is_jal;
-  output       mem_write;
-  output [1:0] mem_width;
-  output       mem_sign_extend;
-  output [1:0] reg_src; // 10 if next PC, 01 if memory, 00 if ALU result
-  output [3:0] alu_op;
-  output       alu_flag;
 
   assign alu_1_src = opcode == `OP_LUI   ? 2'b01 :
                      opcode == `OP_AUIPC ? 2'b10 : 2'b00;

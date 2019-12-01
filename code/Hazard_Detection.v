@@ -1,32 +1,19 @@
 `include "Opcode.v"
 
 module Hazard_Detection (
-  clk,
-  if_insr,
-  id_insr,
-  rd_3,
-  mem_write_3,
-  rd_4,
-  hazard_stall,
-  fw_dm_alu,
-  fw_alu_reg1,
-  fw_alu_reg2,
-  fw_dm_reg1,
-  fw_dm_reg2,
+  input        clk,
+  input [31:0] if_insr,
+  input [31:0] id_insr,
+  input [4:0]  rd_3,
+  input        mem_write_3,
+  input [4:0]  rd_4,
+  output       hazard_stall,
+  output reg   fw_dm_alu,
+  output       fw_alu_reg1,
+  output       fw_alu_reg2,
+  output       fw_dm_reg1,
+  output       fw_dm_reg2
 );
-
-  input        clk;
-  input [31:0] if_insr;
-  input [31:0] id_insr;
-  input [4:0]  rd_3;
-  input        mem_write_3;
-  input [4:0]  rd_4;
-  output       hazard_stall;
-  output       fw_dm_alu;
-  output       fw_alu_reg1;
-  output       fw_alu_reg2;
-  output       fw_dm_reg1;
-  output       fw_dm_reg2;
 
   wire [6:0] if_opcode = if_insr[6:0];
   wire [6:0] id_opcode = id_insr[6:0];
@@ -61,7 +48,6 @@ module Hazard_Detection (
   //   signal for 1 cycle
   wire fw_dm_alu_next = rd_3 != 5'b0 && rd_3 == id_insr[24:20] &&
       id_opcode == `OP_STORE;
-  reg fw_dm_alu;
   always @(posedge clk) begin
     fw_dm_alu <= fw_dm_alu_next;
   end

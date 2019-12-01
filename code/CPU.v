@@ -1,13 +1,8 @@
 module CPU (
-  clk_i,
-  rst_i,
-  start_i
+  input clk_i,
+  input rst_i,
+  input start_i
 );
-
-  // Ports
-  input clk_i;
-  input rst_i;
-  input start_i;
 
   // ----- Instruction fetch stage -----
   wire [31:0] next_pc_back1_2; // from stage 2
@@ -335,8 +330,6 @@ module CPU (
     .mem_sign_extend_i     (mem_sign_extend_3),
     .reg_src_i             (reg_src_3),
     .mem_write_i           (mem_write_3),
-    .alu_1_src_i           (alu_1_src),
-    .alu_2_src_i           (alu_2_src_2),
     .advance_pc_o          (advance_pc_4),
     .alu_result_o          (alu_result_4),
     .reg_2_data_o          (reg_2_data_4),
@@ -344,9 +337,7 @@ module CPU (
     .mem_width_o           (mem_width_4),
     .mem_sign_extend_o     (mem_sign_extend_4),
     .reg_src_o             (reg_src_4),
-    .mem_write_o           (mem_write_4),
-    .is_reg1_o             (is_reg1),
-    .alu_2_src_o           (alu_2_src_3)
+    .mem_write_o           (mem_write_4)
   );
 
 endmodule

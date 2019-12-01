@@ -1,20 +1,12 @@
 module ALU (
-  opr_1,
-  opr_2,
-  alu_op,
-  flag,
-  result
+  input [31:0] opr_1,
+  input [31:0] opr_2,
+  input [3:0]  alu_op, // {ins[25], ins[14:12]} if opcode == b0110011
+                       // {1'b0, ins[14:12]}    if opcode == b0010011
+                       // 4'b0                  otherwise
+  input        flag,   // 1 if SRA/SRAI/SUB else 0
+  output reg [31:0] result // use reg for simpler code
 );
-
-  input  [31:0] opr_1;
-  input  [31:0] opr_2;
-  input  [3:0]  alu_op; // {ins[25], ins[14:12]} if opcode == b0110011
-                        // {1'b0, ins[14:12]}    if opcode == b0010011
-                        // 4'b0                  otherwise
-  input         flag;   // 1 if SRA/SRAI/SUB else 0
-  output [31:0] result;
-
-  reg    [31:0] result; // use reg for simpler code
 
   always @* begin // a combo logic (no clock)
     case (alu_op)

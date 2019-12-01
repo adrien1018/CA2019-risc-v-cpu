@@ -1,11 +1,7 @@
 module Immediate_Gen (
-  insr,
-  result
+  input  [31:0] insr,
+  output [31:0] result
 );
-
-  input  [31:0] insr;
-  output [31:0] result;
-
   assign result = insr[4:2] == 3'b101 ? {insr[31:12], 12'b0} : // U-type
                   insr[3:2] == 2'b11 ? // J-type
                       {{12{insr[31]}}, insr[19:12], insr[20], insr[30:21], 1'b0} :
@@ -16,5 +12,4 @@ module Immediate_Gen (
                   insr[6:2] == 5'b11000 ? // B-type
                       {{20{insr[31]}}, insr[7], insr[30:25], insr[11:8], 1'b0} :
                   32'b0; // R-type
-
 endmodule

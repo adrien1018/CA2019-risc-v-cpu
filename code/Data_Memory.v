@@ -2,22 +2,14 @@
 `define DM_MASK ((1<<`DM_BITS)-1)
 
 module Data_Memory (
-  clk,
-  addr,
-  data,
-  width,
-  memwrite,
-  sign_extend,
-  result
+  input         clk,
+  input  [31:0] addr,
+  input  [31:0] data,
+  input  [1:0]  width, // ins[13:12] (00: 8-bit, 01: 16-bit, 10: 32-bit)
+  input         memwrite,
+  input         sign_extend,
+  output [31:0] result
 );
-
-  input         clk;
-  input  [31:0] addr;
-  input  [31:0] data;
-  input  [1:0]  width; // ins[13:12] (00: 8-bit, 01: 16-bit, 10: 32-bit)
-  input         memwrite;
-  input         sign_extend;
-  output [31:0] result;
 
   reg    [31:0] memory[0:`DM_MASK];
 
