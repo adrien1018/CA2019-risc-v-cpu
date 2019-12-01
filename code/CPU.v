@@ -20,6 +20,11 @@ module CPU (
 
   wire [31:0] next_pc;
 
+  wire        taken;
+  wire        is_branch;
+  wire        is_jal;
+  wire        is_jalr;
+
   PC PC(
     .clk_i   (clk_i),
     .rst_i   (rst_i),
@@ -89,10 +94,6 @@ module CPU (
   wire [1:0]  alu_1_src;
   wire        alu_2_src_2;
   wire [1:0]  alu_control;
-  wire        taken;
-  wire        is_branch;
-  wire        is_jal;
-  wire        is_jalr;
   wire        is_nop = 0;
 
   MUX32_2 mux_inst_or_nop(
