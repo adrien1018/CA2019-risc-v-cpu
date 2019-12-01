@@ -1,3 +1,5 @@
+`include "Opcode.v"
+
 module Control (
   opcode,
   funct3,
@@ -33,23 +35,21 @@ module Control (
   output [3:0] alu_op;
   output       alu_flag;
 
-  assign alu_1_src = opcode == 7'b0110111 ? 2'b01 : // LUI
-                     opcode == 7'b0010111 ? 2'b10 /* AUIPC */ : 2'b00;
-  assign alu_2_src = opcode != 7'b0110011 && // register arithmetic
-                     opcode != 7'b1100011;   // branch
-  assign reg_write = opcode[5:2] != 4'b1000; // store/branch does not write registers
-  assign is_branch = opcode == 7'b1100011;
-  assign is_jalr = opcode == 7'b1100111;
-  assign is_jal = opcode == 7'b1101111;
-  assign mem_write = opcode == 7'b0100011;
+  assign alu_1_src = opcode == `OP_LUI   ? 2'b01 :
+                     opcode == `OP_AUIPC ? 2'b10 : 2'b00;
+  assign is_branch = opcode == `OP_BRANCH;
+  assign alu_2_src = opcode != `OP_REGARI && is_branch;
+  assign reg_write = opcode != `OP_STORE && is_branch;
+  assign is_jalr = opcode == `OP_JALR;
+  assign is_jal = opcode == `OP_JAL;
+  assign mem_write = opcode == `OP_STORE;
   assign mem_width = funct3[1:0];
   assign mem_sign_extend = ~funct3[2];
   assign reg_src = (is_jal | is_jalr) ? 2'b10 :
-                   opcode == 7'b0000011 ? 2'b01 /* load */ : 2'b00;
+                   opcode == `OP_LOAD ? 2'b01 : 2'b00;
 
-  wire [1:0] control = opcode == 7'b0010011 ? 2'b10 : // imm arithmetic
-                       opcode == 7'b0110011 ? 2'b11 : // reg arithmetic
-                       2'b00;
+  wire [1:0] control = opcode == `OP_IMMARI ? 2'b10 :
+                       opcode == `OP_REGARI ? 2'b11 : 2'b00;
   assign alu_op = control == 2'b11 ? {funct7[0], funct3} :
                   control == 2'b10 ? {1'b0, funct3} : 4'b0;
   assign alu_flag = (control[1] == 1'b1 && funct3 == 3'b101 && funct7[5]) || // SRA/SRAI
