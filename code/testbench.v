@@ -47,8 +47,6 @@ initial begin
     CPU.ex_mem.reg_write_data_addr_o = 5'b0;
     CPU.ex_mem.mem_write_o = 1'b0;
 
-    CPU.mem_wb.reg_write_data_addr_o = 5'b0;
-
     // Load instructions into instruction memory
     $readmemb("instruction.txt", CPU.Instruction_Memory.memory);
 

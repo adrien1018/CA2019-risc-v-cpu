@@ -279,13 +279,8 @@ module CPU (
     .result  (reg_write_data_4)
   );
 
-  // ----- Register write stage -----
-  // -> . (<-)
-  wire [31:0] reg_write_data_5;
-  wire [4:0]  reg_write_data_addr_5;
-
-  assign reg_write_data_back2 = reg_write_data_5;
-  assign reg_write_addr_back2 = reg_write_data_addr_5;
+  assign reg_write_data_back2 = reg_write_data_4;
+  assign reg_write_addr_back2 = reg_write_data_addr_4;
 
   // ----- IF/ID -----
   IF_ID if_id(
@@ -348,15 +343,6 @@ module CPU (
     .mem_write_o           (mem_write_4),
     .is_reg1_o             (is_reg1),
     .alu_2_src_o           (alu_2_src_3)
-  );
-
-  // ----- MEM/WB -----
-  MEM_WB mem_wb(
-    .clk                   (clk_i),
-    .reg_write_data_i      (reg_write_data_4),
-    .reg_write_data_addr_i (reg_write_data_addr_4),
-    .reg_write_data_o      (reg_write_data_5),
-    .reg_write_data_addr_o (reg_write_data_addr_5)
   );
 
 endmodule
