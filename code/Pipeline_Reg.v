@@ -3,14 +3,20 @@ module IF_ID (
   input [31:0] now_pc_i,
   input [31:0] inst_i,
   input [31:0] advance_pc_i,
+  input        is_jalr_i,
+  input        stall_i,
   output reg [31:0] now_pc_o,
   output reg [31:0] inst_o,
-  output reg [31:0] advance_pc_o
+  output reg [31:0] advance_pc_o,
+  output reg        prev_jalr_o,
+  output reg        stall_o
 );
   always @(posedge clk) begin
     now_pc_o <= now_pc_i;
     inst_o <= inst_i;
     advance_pc_o <= advance_pc_i;
+    prev_jalr_o <= is_jalr_i;
+    stall_o <= stall_i;
   end
 endmodule
 

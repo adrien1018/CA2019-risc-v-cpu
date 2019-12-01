@@ -5,20 +5,16 @@ module CPU (
 );
 
   // ----- Instruction fetch stage -----
-  wire [31:0] next_pc_back1_2; // from stage 2
-  wire [31:0] next_pc_back1_3; // from stage 3 (indir branch)
-  wire [31:0] next_pc_jump;
-  wire        next_pc_control_back1; // from stage 2
+  // . <-
+  wire [31:0] jump_pc_back1; // from stage 2
+  wire [31:0] jalr_pc_back1; // from stage 3
+  wire [1:0]  next_pc_control_back1; // from stage 2
+  // . ->
   wire [31:0] now_pc_1;
   wire [31:0] advance_pc_1;
   wire [31:0] instruction_1;
 
   wire [31:0] next_pc;
-
-  wire        taken;
-  wire        is_branch;
-  wire        is_jal;
-  wire        is_jalr;
 
   PC PC(
     .clk_i   (clk_i),
@@ -39,17 +35,12 @@ module CPU (
     .instr_o (instruction_1)
   );
 
-  MUX32_2 mux_next_pc_jump(
-    .in0     (next_pc_back1_2),
-    .in1     (next_pc_back1_3),
-    .control (next_pc_control_back1),
-    .result  (next_pc_jump)
-  );
-
-  MUX32_2 mux_next_pc(
+  MUX32_4 mux_next_pc(
     .in0 (advance_pc_1),
-    .in1 (next_pc_jump),
-    .control (is_jalr | is_jal | (taken & is_branch)),
+    .in1 (now_pc_1),
+    .in2 (jump_pc_back1),
+    .in3 (jalr_pc_back1),
+    .control (next_pc_control_back1),
     .result (next_pc)
   );
 
@@ -88,7 +79,13 @@ module CPU (
   wire        alu_2_src_2;
   wire [1:0]  alu_control;
   wire        reg_write;
-  wire        is_nop = 0;
+  wire        taken;
+  wire        is_branch;
+  wire        is_jal;
+  wire        is_jalr;
+  wire        prev_jalr;
+  wire        next_stall;
+  wire        is_nop;
 
   MUX32_2 mux_inst_or_nop(
     .in0     (instruction_2_flow),
@@ -179,9 +176,7 @@ module CPU (
     .opr_2  (imm),
     .result (branch_target)
   );
-
-  assign next_pc_back1_2 = branch_target;
-  assign next_pc_control_back1 = is_jalr;
+  assign jump_pc_back1 = branch_target;
 
   // ----- ALU stage -----
   // . <-
@@ -222,7 +217,7 @@ module CPU (
     .result  (alu_result_3)
   );
 
-  assign next_pc_back1_3 = alu_result_3;
+  assign jalr_pc_back1 = alu_result_3;
   assign fw_alu_back2 = alu_result_3;
 
   // ----- Data write stage -----
@@ -264,8 +259,8 @@ module CPU (
   assign fw_dm_back3 = reg_write_data_4;
   assign reg_write_addr_back2 = reg_write_data_addr_4;
 
-  // ----- Hazard detection & forwarding & stall control -----
-  wire hazard_stall;
+  // ----- Hazard detection & forwarding & stall -----
+  wire        hazard_stall;
   Hazard_Detection hazard_detect(
     .clk          (clk_i),
     .if_insr      (instruction_1),
@@ -280,6 +275,16 @@ module CPU (
     .fw_dm_reg1   (fw_dm_reg1),
     .fw_dm_reg2   (fw_dm_reg2)
   );
+  Stall_Control stall_control(
+    .taken     (taken),
+    .is_branch (is_branch),
+    .is_jal    (is_jal),
+    .is_jalr   (is_jalr),
+    .prev_jalr (prev_jalr),
+    .hazard    (hazard_stall),
+    .next_pc_control (next_pc_control_back1),
+    .stall           (next_stall)
+  );
 
   // ----- IF/ID -----
   IF_ID if_id(
@@ -287,9 +292,13 @@ module CPU (
     .now_pc_i     (now_pc_1),
     .inst_i       (instruction_1),
     .advance_pc_i (advance_pc_1),
+    .is_jalr_i    (is_jalr),
+    .stall_i      (next_stall),
     .now_pc_o     (now_pc_2),
     .inst_o       (instruction_2_flow),
-    .advance_pc_o (advance_pc_2)
+    .advance_pc_o (advance_pc_2),
+    .prev_jalr_o  (prev_jalr),
+    .stall_o      (is_nop)
   );
 
   // ----- ID/EX -----

@@ -11,7 +11,7 @@ module Data_Memory (
   output [31:0] result
 );
 
-  reg    [31:0] memory[0:`DM_MASK];
+  reg  [31:0] memory[0:`DM_MASK];
 
   wire [31:0] full_result;
   wire [`DM_BITS-1:0] entry = addr[31:2] & `DM_MASK;

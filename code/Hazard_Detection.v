@@ -39,10 +39,11 @@ module Hazard_Detection (
   assign fw_alu_reg2 = rd_3 != 5'b0 && rd_3 == id_insr[24:20] &&
       reg2_might_forward;
   // 3->2 forwarding will override 4->2 forwarding
+  // note that 4->2 forwarding is necessary on regwrite/store
   assign fw_dm_reg1 = rd_4 != 5'b0 && rd_4 == id_insr[19:15] &&
       reg1_might_forward && !fw_alu_reg1;
   assign fw_dm_reg2 = rd_4 != 5'b0 && rd_4 == id_insr[24:20] &&
-      reg2_might_forward && !fw_alu_reg2;
+      (reg2_might_forward || id_opcode == `OP_STORE) && !fw_alu_reg2;
 
   // Detect 4->3 forwarding at stage 3/2, so a register is needed to delay the
   //   signal for 1 cycle
@@ -52,4 +53,20 @@ module Hazard_Detection (
     fw_dm_alu <= fw_dm_alu_next;
   end
 
+endmodule
+
+module Stall_Control(
+  input taken,
+  input is_branch,
+  input is_jal,
+  input is_jalr,
+  input prev_jalr,
+  input hazard,
+  output [1:0] next_pc_control, // 00: PC+4, 01: PC, 10: jump, 11: jalr
+  output       stall
+);
+  wire jump = (taken & is_branch) | is_jal;
+  assign next_pc_control =
+      prev_jalr ? 2'b11 : jump ? 2'b10 : (hazard | is_jalr) ? 2'b01 : 2'b00;
+  assign stall = is_jalr | prev_jalr | jump | hazard;
 endmodule
