@@ -58,15 +58,15 @@ module CPU (
     .result (next_pc)
   );
 
-  // ----- Register read stage -----
+  // ----- Register read stage & writeback -----
   // . <-
-  wire [31:0] reg_write_data_back2; // from stage 5
-  wire [4:0]  reg_write_addr_back2; // from stage 5
+  wire [4:0]  reg_write_addr_back2; // from stage 4
+  wire [31:0] fw_alu_back2;         // from stage 3
+  wire [31:0] fw_dm_back2;          // from stage 4; also the data of writeback
   // -> .
   wire [31:0] now_pc_2;
+  wire [31:0] instruction_2_flow;
   // -> . ->
-  wire [31:0] instruction_2_a;
-  wire [31:0] instruction_2;
   wire [31:0] advance_pc_2;
   // . ->
   wire [31:0] alu_1_opr_2;
@@ -79,16 +79,16 @@ module CPU (
   wire        mem_sign_extend_2;
   wire [1:0]  reg_src_2;
   wire [31:0] reg_2_data_2;
+  // from hazard detection
+  wire        fw_dm_reg1,  fw_dm_reg2;
+  wire        fw_alu_reg1, fw_alu_reg2;
 
-  wire [31:0] reg_2_data_2_file;
-  wire [31:0] reg_2_data_2_forward = reg_2_data_2_file; //TODO
-  wire        reg_2_data_2_src = 0; //TODO
+  wire [31:0] instruction;
   wire [31:0] branch_target;
   wire [31:0] imm;
   wire [31:0] reg_1_data;
   wire [31:0] reg_1_data_file;
-  wire [31:0] reg_1_data_forward = reg_1_data_file; //TODO
-  wire        reg_1_data_src = 0; //TODO
+  wire [31:0] reg_2_data_file;
   wire [1:0]  alu_1_src;
   wire        alu_2_src_2;
   wire [1:0]  alu_control;
@@ -96,48 +96,52 @@ module CPU (
   wire        is_nop = 0;
 
   MUX32_2 mux_inst_or_nop(
-    .in0     (instruction_2_a),
+    .in0     (instruction_2_flow),
     .in1     (32'b10011), // NOP
     .control (is_nop),
-    .result  (instruction_2)
+    .result  (instruction)
   );
 
   Registers Registers(
     .clk_i      (clk_i),
-    .RS1addr_i  (instruction_2[19:15]),
-    .RS2addr_i  (instruction_2[24:20]),
+    .RS1addr_i  (instruction[19:15]),
+    .RS2addr_i  (instruction[24:20]),
     .RDaddr_i   (reg_write_addr_back2),
-    .RDdata_i   (reg_write_data_back2),
+    .RDdata_i   (fw_dm_back2),
     .RegWrite_i (1'b1),
     .RS1data_o  (reg_1_data_file),
-    .RS2data_o  (reg_2_data_2_file)
+    .RS2data_o  (reg_2_data_file)
   );
 
-  MUX32_2 mux_reg_2_data_2 (
-    .in0     (reg_2_data_2_file),
-    .in1     (reg_2_data_2_forward),
-    .control (reg_2_data_2_src),
-    .result  (reg_2_data_2)
-  );
-
-  MUX32_2 mux_reg_1_data (
+  // MUX for 3->2 / 4->2 forwarding
+  MUX32_4 mux_reg_1_data(
     .in0     (reg_1_data_file),
-    .in1     (reg_1_data_forward),
-    .control (reg_1_data_src),
+    .in1     (fw_alu_back2),
+    .in2     (fw_dm_back2),
+    .in3     (32'hXXXXXXXX),
+    .control ({fw_dm_reg1, fw_alu_reg1}), // should not both be 1
     .result  (reg_1_data)
+  );
+  MUX32_4 mux_reg_2_data_2(
+    .in0     (reg_2_data_file),
+    .in1     (fw_alu_back2),
+    .in2     (fw_dm_back2),
+    .in3     (32'hXXXXXXXX),
+    .control ({fw_dm_reg2, fw_alu_reg2}), // should not both be 1
+    .result  (reg_2_data_2)
   );
 
   BranchDecision branch_dec(
     .opr_1 (reg_1_data),
     .opr_2 (reg_2_data_2),
-    .op    (instruction_2[14:12]),
+    .op    (instruction[14:12]),
     .taken (taken)
   );
 
   Control control(
-    .opcode          (instruction_2[6:0]),
-    .funct3          (instruction_2[14:12]),
-    .funct7          (instruction_2[31:25]),
+    .opcode          (instruction[6:0]),
+    .funct3          (instruction[14:12]),
+    .funct7          (instruction[31:25]),
     .alu_1_src       (alu_1_src),
     .alu_2_src       (alu_2_src_2),
     .reg_write       (reg_write),
@@ -152,10 +156,10 @@ module CPU (
     .alu_flag        (alu_flag_2)
   );
 
-  assign reg_write_data_addr_2 = reg_write ? instruction_2[11:7] : 5'b0;
+  assign reg_write_data_addr_2 = reg_write ? instruction[11:7] : 5'b0;
 
   Immediate_Gen imm_gen(
-    .insr   (instruction_2),
+    .insr   (instruction),
     .result (imm)
   );
 
@@ -185,19 +189,18 @@ module CPU (
   assign next_pc_control_back1 = is_jalr;
 
   // ----- ALU stage -----
+  // . <-
+  wire [31:0] fw_dm_back3; // from stage 4
   // -> .
-  wire [31:0] alu_1_opr_3_flow;
-  wire [31:0] alu_2_opr_3_flow;
+  wire [31:0] alu_1_opr_3;
+  wire [31:0] alu_2_opr_3;
+  wire [31:0] reg_2_data_3_flow;
   wire [3:0]  alu_op_3;
   wire        alu_flag_3;
   wire        alu_2_src_3;
   wire        is_reg1;
   // -> . ->
   wire [31:0] advance_pc_3;
-  wire [31:0] reg_2_data_3;
-  wire [31:0] reg_2_data_3_flow;
-  wire [31:0] reg_2_data_3_forward = reg_2_data_3_flow; //TODO
-  wire        reg_2_data_3_src = 0; //TODO
   wire [4:0]  reg_write_data_addr_3;
   wire        mem_write_3;
   wire [1:0]  mem_width_3;
@@ -205,32 +208,14 @@ module CPU (
   wire [1:0]  reg_src_3;
   // . ->
   wire [31:0] alu_result_3;
+  wire [31:0] reg_2_data_3;
+  // from hazard detection
+  wire        fw_dm_alu;
 
-  wire [31:0] alu_1_opr_3;
-  wire [31:0] alu_2_opr_3;
-  wire        alu_1_opr_3_src = is_reg1 & 0; //TODO: forward
-  wire        alu_2_opr_3_src = !(alu_2_src_3) & 0; //TODO: forward
-  wire [31:0] alu_1_opr_3_forward = alu_1_opr_3_flow; //TODO
-  wire [31:0] alu_2_opr_3_forward = alu_2_opr_3_flow; //TODO
-
-  MUX32_2 mux_alu_1_opr_3 (
-    .in0     (alu_1_opr_3_flow),
-    .in1     (alu_1_opr_3_forward),
-    .control (alu_1_opr_3_src),
-    .result  (alu_1_opr_3)
-  );
-
-  MUX32_2 mux_alu_2_opr_3 (
-    .in0     (alu_2_opr_3_flow),
-    .in1     (alu_2_opr_3_forward),
-    .control (alu_2_opr_3_src),
-    .result  (alu_2_opr_3)
-  );
-
-  MUX32_2 mux_reg_2_data_3 (
+  MUX32_2 mux_reg_2_data_3(
     .in0     (reg_2_data_3_flow),
-    .in1     (reg_2_data_3_forward),
-    .control (reg_2_data_3_src),
+    .in1     (fw_dm_back3),
+    .control (fw_dm_alu),
     .result  (reg_2_data_3)
   );
 
@@ -243,6 +228,7 @@ module CPU (
   );
 
   assign next_pc_back1_3 = alu_result_3;
+  assign fw_alu_back2 = alu_result_3;
 
   // ----- Data write stage -----
   // -> .
@@ -279,8 +265,26 @@ module CPU (
     .result  (reg_write_data_4)
   );
 
-  assign reg_write_data_back2 = reg_write_data_4;
+  assign fw_dm_back2 = reg_write_data_4;
+  assign fw_dm_back3 = reg_write_data_4;
   assign reg_write_addr_back2 = reg_write_data_addr_4;
+
+  // ----- Hazard detection & forwarding & stall control -----
+  wire hazard_stall;
+  Hazard_Detection hazard_detect(
+    .clk          (clk_i),
+    .if_insr      (instruction_1),
+    .id_insr      (instruction), // stage 2
+    .rd_3         (reg_write_data_addr_3),
+    .mem_write_3  (mem_write_3),
+    .rd_4         (reg_write_data_addr_4),
+    .hazard_stall (hazard_stall),
+    .fw_dm_alu    (fw_dm_alu),
+    .fw_alu_reg1  (fw_alu_reg1),
+    .fw_alu_reg2  (fw_alu_reg2),
+    .fw_dm_reg1   (fw_dm_reg1),
+    .fw_dm_reg2   (fw_dm_reg2)
+  );
 
   // ----- IF/ID -----
   IF_ID if_id(
@@ -289,7 +293,7 @@ module CPU (
     .inst_i       (instruction_1),
     .advance_pc_i (advance_pc_1),
     .now_pc_o     (now_pc_2),
-    .inst_o       (instruction_2_a),
+    .inst_o       (instruction_2_flow),
     .advance_pc_o (advance_pc_2)
   );
 
@@ -307,8 +311,8 @@ module CPU (
     .mem_width_i           (mem_width_2),
     .mem_sign_extend_i     (mem_sign_extend_2),
     .reg_src_i             (reg_src_2),
-    .alu_1_opr_o           (alu_1_opr_3_flow),
-    .alu_2_opr_o           (alu_2_opr_3_flow),
+    .alu_1_opr_o           (alu_1_opr_3),
+    .alu_2_opr_o           (alu_2_opr_3),
     .alu_op_o              (alu_op_3),
     .alu_flag_o            (alu_flag_3),
     .advance_pc_o          (advance_pc_3),

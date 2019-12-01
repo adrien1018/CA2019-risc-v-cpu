@@ -38,8 +38,8 @@ module Control (
   assign alu_1_src = opcode == `OP_LUI   ? 2'b01 :
                      opcode == `OP_AUIPC ? 2'b10 : 2'b00;
   assign is_branch = opcode == `OP_BRANCH;
-  assign alu_2_src = opcode != `OP_REGARI && is_branch;
-  assign reg_write = opcode != `OP_STORE && is_branch;
+  assign alu_2_src = opcode != `OP_REGARI && opcode != `OP_BRANCH;
+  assign reg_write = opcode != `OP_STORE && opcode != `OP_BRANCH;
   assign is_jalr = opcode == `OP_JALR;
   assign is_jal = opcode == `OP_JAL;
   assign mem_write = opcode == `OP_STORE;

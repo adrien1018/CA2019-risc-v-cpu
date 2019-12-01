@@ -58,7 +58,7 @@ always@(posedge Clk) begin
         CPU.alu_1_opr_3,
         CPU.alu_2_opr_3,
         CPU.is_branch_3,
-        CPU.instruction_2[14:12],
+        CPU.instruction[14:12],
         CPU.eq_2,
         CPU.taken,
         $signed(CPU.alu_result_3)
@@ -97,9 +97,9 @@ always@(posedge Clk) begin
       $signed(CPU.Registers.register[30]),
       $signed(CPU.Registers.register[31]),
       CPU.PC.pc_o,
-      CPU.instruction_2,
+      CPU.instruction,
     );
-    if (CPU.instruction_2 == 32'b0) // instruction end
+    if (CPU.instruction == 32'b0) // instruction end
       $finish;
 end
 
