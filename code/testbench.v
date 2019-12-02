@@ -43,10 +43,10 @@ initial begin
     CPU.if_id.inst_o = 32'b10011; // NOP
     CPU.if_id.prev_jalr_o = 1'b0;
 
-    CPU.id_ex.reg_write_data_addr_o = 5'b0;
+    CPU.id_ex.reg_addr_o = 5'b0;
     CPU.id_ex.mem_write_o = 1'b0;
 
-    CPU.ex_mem.reg_write_data_addr_o = 5'b0;
+    CPU.ex_mem.reg_addr_o = 5'b0;
     CPU.ex_mem.mem_write_o = 1'b0;
 
     // Load instructions into instruction memory
@@ -84,7 +84,7 @@ always@(posedge Clk) begin
     //$fdisplay(outfile, "next_pc_control: %b", CPU.next_pc_control_back1);
     //$fdisplay(outfile, "hazard: %b", CPU.hazard_stall);
     //$fdisplay(outfile, "stall: %b/%b", CPU.next_stall, CPU.is_nop);
-    //$fdisplay(outfile, "reg_write_2/3/4: %d/%d/%d", CPU.reg_write_data_addr_2, CPU.reg_write_data_addr_3, CPU.reg_write_data_addr_4);
+    //$fdisplay(outfile, "reg_write_2/3/4: %d/%d/%d", CPU.reg_addr_2, CPU.reg_addr_3, CPU.reg_addr_4);
     //$fdisplay(outfile, "mem_write_2/3/4: %b/%b/%b", CPU.mem_write_2, CPU.mem_write_3, CPU.mem_write_4);
     //$fdisplay(outfile, "forward 4->3: %b/%b", CPU.hazard_detect.fw_dm_alu_next, CPU.hazard_detect.fw_dm_alu);
     //$fdisplay(outfile, "rd_3: %d", CPU.hazard_detect.rd_3);
