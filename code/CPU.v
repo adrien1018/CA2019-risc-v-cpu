@@ -51,7 +51,7 @@ module CPU (
   wire [31:0] fw_dm_back2;          // from stage 4; also the data of writeback
   // -> .
   wire [31:0] now_pc_2;
-  wire [31:0] instruction_2_flow;
+  wire [31:0] instruction_2;
   // -> . ->
   wire [31:0] advance_pc_2;
   // . ->
@@ -69,7 +69,6 @@ module CPU (
   wire        fw_dm_reg1,  fw_dm_reg2;
   wire        fw_alu_reg1, fw_alu_reg2;
 
-  wire [31:0] instruction;
   wire [31:0] branch_target;
   wire [31:0] imm;
   wire [31:0] reg_1_data;
@@ -84,20 +83,12 @@ module CPU (
   wire        is_jal;
   wire        is_jalr;
   wire        prev_jalr;
-  wire        next_stall;
-  wire        is_nop;
-
-  MUX32_2 mux_inst_or_nop(
-    .in0     (instruction_2_flow),
-    .in1     (32'b10011), // NOP
-    .control (is_nop),
-    .result  (instruction)
-  );
+  wire        next_nop;
 
   Registers Registers(
     .clk_i      (clk_i),
-    .RS1addr_i  (instruction[19:15]),
-    .RS2addr_i  (instruction[24:20]),
+    .RS1addr_i  (instruction_2[19:15]),
+    .RS2addr_i  (instruction_2[24:20]),
     .RDaddr_i   (reg_write_addr_back2),
     .RDdata_i   (fw_dm_back2),
     .RegWrite_i (1'b1),
@@ -126,14 +117,14 @@ module CPU (
   BranchDecision branch_dec(
     .opr_1 (reg_1_data),
     .opr_2 (reg_2_data_2),
-    .op    (instruction[14:12]),
+    .op    (instruction_2[14:12]),
     .taken (taken)
   );
 
   Control control(
-    .opcode          (instruction[6:0]),
-    .funct3          (instruction[14:12]),
-    .funct7          (instruction[31:25]),
+    .opcode          (instruction_2[6:0]),
+    .funct3          (instruction_2[14:12]),
+    .funct7          (instruction_2[31:25]),
     .alu_1_src       (alu_1_src),
     .alu_2_src       (alu_2_src_2),
     .reg_write       (reg_write),
@@ -148,10 +139,10 @@ module CPU (
     .alu_flag        (alu_flag_2)
   );
 
-  assign reg_write_data_addr_2 = reg_write ? instruction[11:7] : 5'b0;
+  assign reg_write_data_addr_2 = reg_write ? instruction_2[11:7] : 5'b0;
 
   Immediate_Gen imm_gen(
-    .insr   (instruction),
+    .insr   (instruction_2),
     .result (imm)
   );
 
@@ -263,9 +254,9 @@ module CPU (
   wire        hazard_stall;
   Hazard_Detection hazard_detect(
     .clk          (clk_i),
-    .if_insr      (instruction_1),
-    .id_insr      (instruction), // stage 2
+    .id_insr      (instruction_2),
     .rd_3         (reg_write_data_addr_3),
+    .reg_src_3    (reg_src_3),
     .mem_write_3  (mem_write_3),
     .rd_4         (reg_write_data_addr_4),
     .hazard_stall (hazard_stall),
@@ -283,7 +274,7 @@ module CPU (
     .prev_jalr (prev_jalr),
     .hazard    (hazard_stall),
     .next_pc_control (next_pc_control_back1),
-    .stall           (next_stall)
+    .next_nop        (next_nop)
   );
 
   // ----- IF/ID -----
@@ -293,12 +284,12 @@ module CPU (
     .inst_i       (instruction_1),
     .advance_pc_i (advance_pc_1),
     .is_jalr_i    (is_jalr),
-    .stall_i      (next_stall),
+    .nop_i        (next_nop),
+    .stall        (hazard_stall),
     .now_pc_o     (now_pc_2),
-    .inst_o       (instruction_2_flow),
+    .inst_o       (instruction_2),
     .advance_pc_o (advance_pc_2),
-    .prev_jalr_o  (prev_jalr),
-    .stall_o      (is_nop)
+    .prev_jalr_o  (prev_jalr)
   );
 
   // ----- ID/EX -----
@@ -315,6 +306,7 @@ module CPU (
     .mem_width_i           (mem_width_2),
     .mem_sign_extend_i     (mem_sign_extend_2),
     .reg_src_i             (reg_src_2),
+    .nop_i                 (hazard_stall),
     .alu_1_opr_o           (alu_1_opr_3),
     .alu_2_opr_o           (alu_2_opr_3),
     .alu_op_o              (alu_op_3),

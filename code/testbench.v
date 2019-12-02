@@ -28,7 +28,8 @@ initial begin
     end
 
     // initialize data memory
-    for(i=0; i<1024; i=i+1) begin
+    CPU.data_mem.memory[0] = 32'h5;
+    for(i=1; i<1024; i=i+1) begin
         CPU.data_mem.memory[i] = 32'b0;
     end
 
@@ -41,7 +42,6 @@ initial begin
     CPU.if_id.now_pc_o = 32'b0;
     CPU.if_id.inst_o = 32'b10011; // NOP
     CPU.if_id.prev_jalr_o = 1'b0;
-    CPU.if_id.stall_o = 1'b0;
 
     CPU.id_ex.reg_write_data_addr_o = 5'b0;
     CPU.id_ex.mem_write_o = 1'b0;
@@ -65,7 +65,7 @@ initial begin
 end
 
 always@(posedge Clk) begin
-    if(counter == 30)    // stop after 30 cycles
+    if(counter == 64)    // stop after 64 cycles
         $finish;
 
     // print PC

@@ -4,19 +4,20 @@ module IF_ID (
   input [31:0] inst_i,
   input [31:0] advance_pc_i,
   input        is_jalr_i,
-  input        stall_i,
+  input        nop_i,
+  input        stall,
   output reg [31:0] now_pc_o,
   output reg [31:0] inst_o,
   output reg [31:0] advance_pc_o,
-  output reg        prev_jalr_o,
-  output reg        stall_o
+  output reg        prev_jalr_o
 );
   always @(posedge clk) begin
-    now_pc_o <= now_pc_i;
-    inst_o <= inst_i;
-    advance_pc_o <= advance_pc_i;
-    prev_jalr_o <= is_jalr_i;
-    stall_o <= stall_i;
+    if (!stall) begin
+      now_pc_o <= now_pc_i;
+      inst_o <= nop_i ? 32'b10011 : inst_i;
+      advance_pc_o <= advance_pc_i;
+      prev_jalr_o <= is_jalr_i;
+    end
   end
 endmodule
 
@@ -33,6 +34,7 @@ module ID_EX (
   input [1:0]  mem_width_i,
   input        mem_sign_extend_i,
   input [1:0]  reg_src_i,
+  input        nop_i,
   output reg [31:0] alu_1_opr_o,
   output reg [31:0] alu_2_opr_o,
   output reg [3:0]  alu_op_o,
@@ -52,8 +54,8 @@ module ID_EX (
     alu_flag_o <= alu_flag_i;
     advance_pc_o <= advance_pc_i;
     reg_2_data_o <= reg_2_data_i;
-    reg_write_data_addr_o <= reg_write_data_addr_i;
-    mem_write_o <= mem_write_i;
+    reg_write_data_addr_o <= nop_i ? 5'b0 : reg_write_data_addr_i;
+    mem_write_o <= nop_i ? 1'b0 : mem_write_i;
     mem_width_o <= mem_width_i;
     mem_sign_extend_o <= mem_sign_extend_i;
     reg_src_o <= reg_src_i;
