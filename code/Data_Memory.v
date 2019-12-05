@@ -35,18 +35,18 @@ module Data_Memory (
         2'b11:; // nothing
         2'b10:
           case (addr[1:0])
-            2'b00: memory[entry] = data;
-            2'b01: {memory[(entry+1)&`DM_MASK][7:0], memory[entry][31:8]} = data;
-            2'b10: {memory[(entry+1)&`DM_MASK][15:0], memory[entry][31:16]} = data;
-            2'b11: {memory[(entry+1)&`DM_MASK][23:0], memory[entry][31:24]} = data;
+            2'b00: memory[entry] <= data;
+            2'b01: {memory[(entry+1)&`DM_MASK][7:0], memory[entry][31:8]} <= data;
+            2'b10: {memory[(entry+1)&`DM_MASK][15:0], memory[entry][31:16]} <= data;
+            2'b11: {memory[(entry+1)&`DM_MASK][23:0], memory[entry][31:24]} <= data;
           endcase
         2'b01:
           if (addr[1:0] != 2'b11)
-            memory[entry][addr[1:0]*8+:16] = data[15:0];
+            memory[entry][addr[1:0]*8+:16] <= data[15:0];
           else
-            {memory[(entry+1)&`DM_MASK][7:0], memory[entry][31:24]} = data[15:0];
+            {memory[(entry+1)&`DM_MASK][7:0], memory[entry][31:24]} <= data[15:0];
         2'b00:
-          memory[entry][addr[1:0]*8+:8] = data[7:0];
+          memory[entry][addr[1:0]*8+:8] <= data[7:0];
       endcase
     end
   end
