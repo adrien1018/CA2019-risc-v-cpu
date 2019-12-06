@@ -89,3 +89,16 @@ module EX_MEM (
     mem_write_o <= mem_write_i;
   end
 endmodule
+
+module MEM_WB (
+  input        clk,
+  input [31:0] write_back_i,
+  input [4:0] write_addr_i,
+  output reg [31:0] write_back_o,
+  output reg [4:0] write_addr_o
+);
+  always @(posedge clk) begin
+    write_back_o <= write_back_i;
+    write_addr_o <= write_addr_i;
+  end
+endmodule
