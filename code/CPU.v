@@ -251,9 +251,14 @@ module CPU (
     .result  (reg_write_data_4)
   );
 
-  assign fw_dm_back2 = reg_write_data_4;
   assign fw_dm_back3 = reg_write_data_4;
-  assign reg_write_addr_back2 = reg_addr_4;
+
+  // ----- Write back stage -----
+  // -> . ->
+  wire [31:0] reg_write_data_5;
+  wire [4:0] reg_addr_5;
+  assign fw_dm_back2 = reg_write_data_5;
+  assign reg_write_addr_back2 = reg_addr_5;
 
   // ----- Hazard detection & forwarding & stall -----
   wire        hazard_stall;
@@ -342,6 +347,15 @@ module CPU (
     .mem_sign_extend_o (mem_sign_extend_4),
     .reg_src_o         (reg_src_4),
     .mem_write_o       (mem_write_4)
+  );
+
+  // ----- WB -----
+  MEM_WB mem_wb(
+    .clk               (clk_i),
+    .write_back_i      (reg_write_data_4),
+    .write_addr_i      (reg_addr_4),
+    .write_back_o      (reg_write_data_5),
+    .write_addr_o      (reg_addr_5)
   );
 
 endmodule
