@@ -2,3 +2,4 @@ output.txt
 a.out
 *.vvp
 *.vcd
+diff_tools/diff

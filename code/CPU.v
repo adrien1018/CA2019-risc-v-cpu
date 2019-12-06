@@ -46,9 +46,10 @@ module CPU (
 
   // ----- Register read stage & writeback -----
   // . <-
-  wire [4:0]  reg_write_addr_back2; // from stage 4
+  wire [4:0]  reg_write_addr_back2; // from stage 5
+  wire [31:0] reg_write_data_back2; // from stage 5
   wire [31:0] fw_alu_back2;         // from stage 3
-  wire [31:0] fw_dm_back2;          // from stage 4; also the data of writeback
+  wire [31:0] fw_dm_back2;          // from stage 4
   // -> .
   wire [31:0] now_pc_2;
   wire [31:0] instruction_2;
@@ -89,7 +90,7 @@ module CPU (
     .RS1addr_i  (instruction_2[19:15]),
     .RS2addr_i  (instruction_2[24:20]),
     .RDaddr_i   (reg_write_addr_back2),
-    .RDdata_i   (fw_dm_back2),
+    .RDdata_i   (reg_write_data_back2),
     .RegWrite_i (1'b1),
     .RS1data_o  (reg_1_data_file),
     .RS2data_o  (reg_2_data_file)
@@ -250,15 +251,15 @@ module CPU (
     .control (reg_src_4),
     .result  (reg_write_data_4)
   );
-
+  assign fw_dm_back2 = reg_write_data_4;
   assign fw_dm_back3 = reg_write_data_4;
 
   // ----- Write back stage -----
   // -> . ->
   wire [31:0] reg_write_data_5;
   wire [4:0] reg_addr_5;
-  assign fw_dm_back2 = reg_write_data_5;
   assign reg_write_addr_back2 = reg_addr_5;
+  assign reg_write_data_back2 = reg_write_data_5;
 
   // ----- Hazard detection & forwarding & stall -----
   wire        hazard_stall;
@@ -287,7 +288,7 @@ module CPU (
     .next_nop        (next_nop)
   );
 
-  // ----- IF/ID -----
+  // Pipeline registers
   IF_ID if_id(
     .clk         (clk_i),
     .now_pc_i    (now_pc_1),
@@ -300,7 +301,6 @@ module CPU (
     .prev_jalr_o (prev_jalr)
   );
 
-  // ----- ID/EX -----
   ID_EX id_ex(
     .clk               (clk_i),
     .alu_1_opr_i       (alu_1_opr_2),
@@ -328,7 +328,6 @@ module CPU (
     .reg_src_o         (reg_src_3)
   );
 
-  // ----- EX/MEM -----
   EX_MEM ex_mem(
     .clk               (clk_i),
     .advance_pc_i      (advance_pc_3),
@@ -349,13 +348,12 @@ module CPU (
     .mem_write_o       (mem_write_4)
   );
 
-  // ----- WB -----
   MEM_WB mem_wb(
-    .clk               (clk_i),
-    .write_back_i      (reg_write_data_4),
-    .write_addr_i      (reg_addr_4),
-    .write_back_o      (reg_write_data_5),
-    .write_addr_o      (reg_addr_5)
+    .clk          (clk_i),
+    .write_back_i (reg_write_data_4),
+    .write_addr_i (reg_addr_4),
+    .write_back_o (reg_write_data_5),
+    .write_addr_o (reg_addr_5)
   );
 
 endmodule
