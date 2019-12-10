@@ -149,7 +149,7 @@ module CPU (
   MUX32_4 mux_alu_1_opr (
     .in0     (reg_1_data),
     .in1     (32'b0),
-    .in2     (now_pc_1),
+    .in2     (now_pc_2),
     .in3     (32'hXXXXXXXX),
     .control (alu_1_src),
     .result  (alu_1_opr_2)

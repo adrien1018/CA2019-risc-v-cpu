@@ -68,12 +68,15 @@ initial begin
 end
 
 always@(posedge Clk) begin
-  if (0) // used for debugging
-    $display("pc1=%d pc2=%d pc_stage1=%d stall=%b",
-      pc[1],
-      pc[2],
-      CPU.now_pc_1,
-      stall,
+  if (1) // used for debugging
+    $display("taken = %b, isbranch = %b, pc = %d, reg1/2 = %d/%d, fw4-2/3-2 = %b/%b",
+      CPU.taken,
+      CPU.is_branch,
+      CPU.now_pc_2,
+      CPU.reg_1_data,
+      CPU.reg_2_data_2,
+      CPU.fw_dm_reg2,
+      CPU.fw_alu_reg2,
     );
   if (!stall[4])
     $display("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d 0x%x",
@@ -114,12 +117,12 @@ always@(posedge Clk) begin
     );
   if (insr[4] == 32'b0) // instruction end
     $finish;
-  for (i=2; i<=5; i=i+1) begin
+  for (i=3; i<=5; i=i+1) begin
     insr[i] <= insr[i-1];
     pc[i] <= pc[i-1];
   end
-  insr[1] <= CPU.instruction_1;
-  pc[1] <= CPU.now_pc_1;
+  insr[2] <= CPU.instruction_2;
+  pc[2] <= CPU.now_pc_2;
   stall <= {stall[4:2], stall[1] | CPU.hazard_stall, CPU.next_nop};
 end
 
