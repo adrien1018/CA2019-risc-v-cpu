@@ -11,6 +11,7 @@
     * Split the datapath into five stages (IF, ID, EX, MEM, WB).
     * Design and implement the IF-ID, ID-EX, and EX-MEM pipline register.
     * Design the MEM-WB pipline register.
+    * Write the report
 * 資工三 b06902093 王彥仁
     * Implement the MEM-WB stage pipline register.
     * Calculate the number of stall and flush.
@@ -19,9 +20,7 @@
 
 ## Design & implementation
 ### Datapath
-![](https://i.imgur.com/4gCP1hI.jpg)
-
-**TODO: Change reg_addr to (5)**
+![](https://i.imgur.com/yGbbvcN.jpg)
 
 Wires of control signals are omitted for simplicity. They're marked by <font color="red">red arrows</font> instead. The number in the parenthesis indicates the source stage of the control signal (2=ID, 3=EX, ...).
 
