@@ -64,7 +64,7 @@ module Stall_Control(
   output [1:0] next_pc_control, // 00: PC+4, 01: PC, 10: jump, 11: jalr
   output       next_nop
 );
-  wire jump = (taken & is_branch) | is_jal;
+  wire jump = ((taken & is_branch) | is_jal) & ~hazard;
   assign next_pc_control =
       prev_jalr ? 2'b11 : jump ? 2'b10 : (hazard | is_jalr) ? 2'b01 : 2'b00;
   assign next_nop = is_jalr | prev_jalr | jump;

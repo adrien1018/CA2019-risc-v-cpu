@@ -69,7 +69,7 @@ end
 
 always@(posedge Clk) begin
   if (0) // used for debugging
-    $display("taken = %b, isbranch = %b, pc = %d, reg1/2 = %d/%d, fw4-2/3-2 = %b/%b",
+    $display("taken = %b, isbranch = %b, pc = %d, reg1/2 = %d/%d, fw4-2/3-2 = %b/%b, stall = %b",
       CPU.taken,
       CPU.is_branch,
       CPU.now_pc_2,
@@ -77,6 +77,7 @@ always@(posedge Clk) begin
       CPU.reg_2_data_2,
       CPU.fw_dm_reg2,
       CPU.fw_alu_reg2,
+      CPU.hazard_stall,
     );
   if (!stall[4])
     $display("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d 0x%x",
