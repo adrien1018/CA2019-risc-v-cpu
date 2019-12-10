@@ -17,11 +17,12 @@ module CPU (
   wire [31:0] next_pc;
 
   PC PC(
-    .clk_i   (clk_i),
-    .rst_i   (rst_i),
-    .start_i (start_i),
-    .pc_i    (next_pc),
-    .pc_o    (now_pc_1)
+    .clk_i     (clk_i),
+    .rst_i     (rst_i),
+    .start_i   (start_i),
+    .PCWrite_i (1'b1),
+    .pc_i      (next_pc),
+    .pc_o      (now_pc_1)
   );
 
   Adder pc_advance_1(
@@ -234,13 +235,11 @@ module CPU (
   wire [31:0] mem_data;
 
   Data_Memory data_mem(
-    .clk         (clk_i),
-    .addr        (alu_result_4),
-    .data        (reg_2_data_4),
-    .width       (mem_width_4),
-    .memwrite    (mem_write_4),
-    .sign_extend (mem_sign_extend_4),
-    .result      (mem_data)
+    .clk_i       (clk_i),
+    .addr_i      (alu_result_4),
+    .data_i      (reg_2_data_4),
+    .MemWrite_i  (mem_write_4),
+    .data_o      (mem_data)
   );
 
   MUX32_4 mux_reg_write_data(

@@ -49,9 +49,6 @@ initial begin
     $readmemb(file, CPU.Instruction_Memory.memory);
   else
     $readmemb("instruction.txt", CPU.Instruction_Memory.memory);
-  // Rotate instruction memory to the correct position
-  for (i=0; i<256; i=i+1)
-    CPU.Instruction_Memory.memory[(i+2)&255] <= CPU.Instruction_Memory.memory[i];
 
   Clk = 0;
   Reset = 0;
@@ -61,8 +58,7 @@ initial begin
   Reset = 1;
   Start = 1;
   // Set PC & registers to match `jupiter` results
-  CPU.PC.pc_o = 65544;
-  CPU.Registers.register[2] = 32'hbffffff0;
+  CPU.Registers.register[2] = 32;
   CPU.Registers.register[3] = 32'h10008000;
   CPU.Registers.register[6] = 32'h10000;
 end
@@ -83,7 +79,7 @@ always@(posedge Clk) begin
     $display("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d 0x%x",
       $signed(CPU.Registers.register[ 0]),
       $signed(CPU.Registers.register[ 1]),
-      $signed(CPU.Registers.register[ 2]),
+      $signed(CPU.Registers.register[ 2]+32'hbffffff0-32),
       $signed(CPU.Registers.register[ 3]),
       $signed(CPU.Registers.register[ 4]),
       $signed(CPU.Registers.register[ 5]),
@@ -113,7 +109,7 @@ always@(posedge Clk) begin
       $signed(CPU.Registers.register[29]),
       $signed(CPU.Registers.register[30]),
       $signed(CPU.Registers.register[31]),
-      pc[4],
+      pc[4] + 65544,
       insr[4],
     );
   if (insr[4] == 32'b0) // instruction end

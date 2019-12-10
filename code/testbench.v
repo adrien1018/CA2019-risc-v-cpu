@@ -92,13 +92,13 @@ always@(posedge Clk) begin
 
   // print Data Memory
   $fdisplay(outfile, "Data Memory: 0x00 = %10d", CPU.data_mem.memory[0]);
-  $fdisplay(outfile, "Data Memory: 0x04 = %10d", CPU.data_mem.memory[1]);
-  $fdisplay(outfile, "Data Memory: 0x08 = %10d", CPU.data_mem.memory[2]);
-  $fdisplay(outfile, "Data Memory: 0x0c = %10d", CPU.data_mem.memory[3]);
-  $fdisplay(outfile, "Data Memory: 0x10 = %10d", CPU.data_mem.memory[4]);
-  $fdisplay(outfile, "Data Memory: 0x14 = %10d", CPU.data_mem.memory[5]);
-  $fdisplay(outfile, "Data Memory: 0x18 = %10d", CPU.data_mem.memory[6]);
-  $fdisplay(outfile, "Data Memory: 0x1c = %10d", CPU.data_mem.memory[7]);
+  $fdisplay(outfile, "Data Memory: 0x04 = %10d", CPU.data_mem.memory[4]);
+  $fdisplay(outfile, "Data Memory: 0x08 = %10d", CPU.data_mem.memory[8]);
+  $fdisplay(outfile, "Data Memory: 0x0c = %10d", CPU.data_mem.memory[12]);
+  $fdisplay(outfile, "Data Memory: 0x10 = %10d", CPU.data_mem.memory[16]);
+  $fdisplay(outfile, "Data Memory: 0x14 = %10d", CPU.data_mem.memory[20]);
+  $fdisplay(outfile, "Data Memory: 0x18 = %10d", CPU.data_mem.memory[24]);
+  $fdisplay(outfile, "Data Memory: 0x1c = %10d", CPU.data_mem.memory[28]);
   $fdisplay(outfile, "\n");
   counter = counter + 1;
 end
