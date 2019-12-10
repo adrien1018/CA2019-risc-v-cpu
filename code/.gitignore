@@ -2,3 +2,7 @@ output.txt
 a.out
 *.vvp
 *.vcd
+PC.v
+Registers.v
+Data_Memory.v
+Instruction_Memory.v
