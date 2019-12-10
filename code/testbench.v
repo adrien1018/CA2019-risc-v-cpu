@@ -89,13 +89,6 @@ always@(posedge Clk) begin
   $fdisplay(outfile, "x5 = %d, x13 = %d, x21 = %d, x29 = %d", CPU.Registers.register[5], CPU.Registers.register[13], CPU.Registers.register[21], CPU.Registers.register[29]);
   $fdisplay(outfile, "x6 = %d, x14 = %d, x22 = %d, x30 = %d", CPU.Registers.register[6], CPU.Registers.register[14], CPU.Registers.register[22], CPU.Registers.register[30]);
   $fdisplay(outfile, "x7 = %d, x15 = %d, x23 = %d, x31 = %d", CPU.Registers.register[7], CPU.Registers.register[15], CPU.Registers.register[23], CPU.Registers.register[31]);
-  //$fdisplay(outfile, "next_pc_control: %b", CPU.next_pc_control_back1);
-  //$fdisplay(outfile, "hazard: %b", CPU.hazard_stall);
-  //$fdisplay(outfile, "stall: %b/%b", CPU.next_stall, CPU.is_nop);
-  //$fdisplay(outfile, "reg_write_2/3/4: %d/%d/%d", CPU.reg_addr_2, CPU.reg_addr_3, CPU.reg_addr_4);
-  //$fdisplay(outfile, "mem_write_2/3/4: %b/%b/%b", CPU.mem_write_2, CPU.mem_write_3, CPU.mem_write_4);
-  //$fdisplay(outfile, "forward 4->3: %b/%b", CPU.hazard_detect.fw_dm_alu_next, CPU.hazard_detect.fw_dm_alu);
-  //$fdisplay(outfile, "rd_3: %d", CPU.hazard_detect.rd_3);
 
   // print Data Memory
   $fdisplay(outfile, "Data Memory: 0x00 = %10d", CPU.data_mem.memory[0]);

@@ -6,9 +6,9 @@ reg          Clk;
 reg          Reset;
 reg          Start;
 reg [1023:0] file;
-reg [5:1]    stall;
-reg [31:0]   insr[5:1];
-reg [31:0]   pc[5:1];
+reg [4:1]    stall;
+reg [31:0]   insr[4:2];
+reg [31:0]   pc[4:2];
 integer      i;
 
 always #(`CYCLE_TIME/2) Clk = ~Clk;
@@ -118,13 +118,13 @@ always@(posedge Clk) begin
     );
   if (insr[4] == 32'b0) // instruction end
     $finish;
-  for (i=3; i<=5; i=i+1) begin
+  for (i=3; i<=4; i=i+1) begin
     insr[i] <= insr[i-1];
     pc[i] <= pc[i-1];
   end
   insr[2] <= CPU.instruction_2;
   pc[2] <= CPU.now_pc_2;
-  stall <= {stall[4:2], stall[1] | CPU.hazard_stall, CPU.next_nop};
+  stall <= {stall[3:2], stall[1] | CPU.hazard_stall, CPU.next_nop};
 end
 
 endmodule
