@@ -70,7 +70,7 @@ always@(posedge Clk) begin
   if (counter == 64)    // stop after 64 cycles
     $finish;
 
-  if (CPU.hazard_detect.hazard_stall == 1 && CPU.control.is_branch == 0)
+  if (CPU.hazard_detect.hazard_stall == 1)
     n_stall = n_stall + 1;
   if (CPU.stall_control.next_nop == 1)
     n_flush = n_flush + 1;
