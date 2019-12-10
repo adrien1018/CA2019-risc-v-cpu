@@ -2,21 +2,39 @@
 
 module TestBench;
 
-reg                Clk;
-reg                Reset;
-reg                Start;
-integer            i;
-reg     [1023:0]   file;
+reg          Clk;
+reg          Reset;
+reg          Start;
+reg [1023:0] file;
+reg [5:1]    stall;
+reg [31:0]   insr[5:1];
+reg [31:0]   pc[5:1];
+integer      i;
 
 always #(`CYCLE_TIME/2) Clk = ~Clk;
 
 CPU CPU(
-    .clk_i  (Clk),
-    .rst_i  (Reset),
-    .start_i(Start)
+  .clk_i  (Clk),
+  .rst_i  (Reset),
+  .start_i(Start)
 );
 
 initial begin
+  // Initialize state printing helper values
+  for (i=1; i<=5; i=i+1) begin
+    insr[i] = 32'hXXXXXXXX;
+    pc[i] = 32'hXXXXXXXX;
+  end
+  stall = 5'b11111;
+  // Initialize pipeline registers
+  CPU.if_id.now_pc_o = 32'b0;
+  CPU.if_id.inst_o = 32'b10011; // NOP
+  CPU.if_id.prev_jalr_o = 1'b0;
+  CPU.id_ex.reg_addr_o = 5'b0;
+  CPU.id_ex.mem_write_o = 1'b0;
+  CPU.ex_mem.reg_addr_o = 5'b0;
+  CPU.ex_mem.mem_write_o = 1'b0;
+  CPU.mem_wb.write_addr_o = 5'b0;
   // Initialize instruction memory
   for (i=0; i<256; i=i+1)
     CPU.Instruction_Memory.memory[i] = 32'b0;
@@ -50,19 +68,14 @@ initial begin
 end
 
 always@(posedge Clk) begin
-    if (0) // used for debugging
-      $display("imm=%d flag=%d alu_op=%b alu_opr=%d,%d branch=%b ins=%b eq=%b taken=%b alu_result=%d",
-        $signed(CPU.imm_3),
-        CPU.flag_2,
-        CPU.alu_op_3,
-        CPU.alu_1_opr_3,
-        CPU.alu_2_opr_3,
-        CPU.is_branch_3,
-        CPU.instruction_2[14:12],
-        CPU.eq_2,
-        CPU.taken,
-        $signed(CPU.alu_result_3)
-      );
+  if (0) // used for debugging
+    $display("pc1=%d pc2=%d pc_stage1=%d stall=%b",
+      pc[1],
+      pc[2],
+      CPU.now_pc_1,
+      stall,
+    );
+  if (!stall[4])
     $display("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d 0x%x",
       $signed(CPU.Registers.register[ 0]),
       $signed(CPU.Registers.register[ 1]),
@@ -96,12 +109,18 @@ always@(posedge Clk) begin
       $signed(CPU.Registers.register[29]),
       $signed(CPU.Registers.register[30]),
       $signed(CPU.Registers.register[31]),
-      CPU.PC.pc_o,
-      CPU.instruction_2,
+      pc[4],
+      insr[4],
     );
-    if (CPU.instruction_2 == 32'b0) // instruction end
-      $finish;
+  if (insr[4] == 32'b0) // instruction end
+    $finish;
+  for (i=2; i<=5; i=i+1) begin
+    insr[i] <= insr[i-1];
+    pc[i] <= pc[i-1];
+  end
+  insr[1] <= CPU.instruction_1;
+  pc[1] <= CPU.now_pc_1;
+  stall <= {stall[4:2], stall[1] | CPU.hazard_stall, CPU.next_nop};
 end
-
 
 endmodule
