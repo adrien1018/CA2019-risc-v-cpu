@@ -34,9 +34,9 @@ module Hazard_Detection (
       id_opcode == `OP_BRANCH;
   // Source of 3->2 forwarding is always ALU result, since JAL/JALR will stall
   assign fw_alu_reg1 = rd_3 != 5'b0 && rd_3 == id_insr[19:15] &&
-      reg1_might_forward;
+      reg_src_3 != 2'b01 && reg1_might_forward;
   assign fw_alu_reg2 = rd_3 != 5'b0 && rd_3 == id_insr[24:20] &&
-      reg2_might_forward;
+      reg_src_3 != 2'b01 && reg2_might_forward;
   // 3->2 forwarding will override 4->2 forwarding
   // note that 4->2 forwarding is necessary on regwrite-*-store
   assign fw_dm_reg1 = rd_4 != 5'b0 && rd_4 == id_insr[19:15] &&

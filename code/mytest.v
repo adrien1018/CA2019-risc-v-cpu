@@ -68,7 +68,7 @@ initial begin
 end
 
 always@(posedge Clk) begin
-  if (1) // used for debugging
+  if (0) // used for debugging
     $display("taken = %b, isbranch = %b, pc = %d, reg1/2 = %d/%d, fw4-2/3-2 = %b/%b",
       CPU.taken,
       CPU.is_branch,
