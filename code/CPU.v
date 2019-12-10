@@ -150,7 +150,7 @@ module CPU (
   MUX32_4 mux_alu_1_opr (
     .in0     (reg_1_data),
     .in1     (32'b0),
-    .in2     (now_pc_2),
+    .in2     (now_pc_2 + 65544),
     .in3     (32'hXXXXXXXX),
     .control (alu_1_src),
     .result  (alu_1_opr_2)
@@ -215,7 +215,7 @@ module CPU (
     .result  (alu_result_3)
   );
 
-  assign jalr_pc_back1 = alu_result_3;
+  assign jalr_pc_back1 = alu_result_3 - 65544;
   assign fw_alu_back2 = alu_result_3;
 
   // ----- Data write stage -----
@@ -245,7 +245,7 @@ module CPU (
   MUX32_4 mux_reg_write_data(
     .in0     (alu_result_4),
     .in1     (mem_data),
-    .in2     (advance_pc_4),
+    .in2     (advance_pc_4 + 65544),
     .in3     (32'hXXXXXXXX),
     .control (reg_src_4),
     .result  (reg_write_data_4)

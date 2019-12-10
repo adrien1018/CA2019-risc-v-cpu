@@ -8,7 +8,7 @@ const std::string s1[] = {"add", "sub", "or", "and", "mul",
 const std::string s2[] = {"addi", "xori", "ori", "andi"};
 const std::string s3[] = {"slli", "srli", "srai"};
 const std::string s4[] = {"beq", "bne", "blt", "bge", "bltu", "bgeu"};
-const std::string s5[] = {"lb", "lh", "lw", "lbu", "lhu", "sb", "sh", "sw"};
+const std::string s5[] = {"lw", "sw"};
 const std::string s6[] = {"lui", "auipc"};
 
 const int Nregs = sizeof(regs) / sizeof(*regs);
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
     } else if (c < 12) {
       printf("%s %s, %d(sp)\n", s5[mrand(0, Ns5 - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
-          mrand(0, 20)(gen));
+          mrand(0, 5)(gen) * 4);
     } else if (c < 13) {
       printf("%s %s, %d\n", s6[mrand(0, Ns6 - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
