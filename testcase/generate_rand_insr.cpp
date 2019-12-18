@@ -5,7 +5,7 @@
 const std::string regs[] = {"x0", "t0", "t1", "t2", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7"};
 const std::string s1[] = {"add", "sub", "or", "and", "mul",
   "sll", "slt", "sltu", "srl", "sra", "xor", "mulh", "mulhsu", "mulhu", "div", "divu", "rem", "remu"};
-const std::string s2[] = {"addi", "xori", "ori", "andi"};
+const std::string s2[] = {"addi", "xori", "ori", "andi", "slti", "sltiu"};
 const std::string s3[] = {"slli", "srli", "srai"};
 const std::string s4[] = {"beq", "bne", "blt", "bge", "bltu", "bgeu"};
 const std::string s5[] = {"lb", "lh", "lw", "lbu", "lhu", "sb", "sh", "sw"};
