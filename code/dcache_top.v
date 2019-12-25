@@ -16,7 +16,7 @@ module dcache_top(
   input                 p1_MemRead_i,
   input                 p1_MemWrite_i,
   output   [32-1:0]     p1_data_o,
-  output                p1_stall_o,
+  output                p1_stall_o
 );
 
 //
@@ -88,16 +88,72 @@ assign    cache_dirty  = write_hit;
 
    // tag comparator
    // TODO: add you code here!  (hit=...?,  r_hit_data=...?)
+   assign hit = (sram_cache_tag == cache_sram_tag);
+   assign r_hit_data = (hit ? sram_cache_data : 256'b0);
 
    // read data :  256-bit to 32-bit
    always@(p1_offset or r_hit_data) begin
       // TODO: add you code here! (p1_data=...?)
+      case (p1_offset[4:2])
+         3'b000: begin
+            p1_data <= r_hit_data[31:0];
+         end
+         3'b001: begin
+            p1_data <= r_hit_data[63:32];
+         end
+         3'b010: begin
+            p1_data <= r_hit_data[95:64];
+         end
+         3'b011: begin
+            p1_data <= r_hit_data[127:96];
+         end
+         3'b100: begin
+            p1_data <= r_hit_data[159:128];
+         end
+         3'b101: begin
+            p1_data <= r_hit_data[191:160];
+         end
+         3'b110: begin
+            p1_data <= r_hit_data[223:192];
+         end
+         3'b111: begin
+            p1_data <= r_hit_data[255:224];
+         end
+      endcase
    end
 
 
    // write data :  32-bit to 256-bit
    always@(p1_offset or r_hit_data or p1_data_i) begin
       // TODO: add you code here! (w_hit_data=...?)
+      w_hit_data <= r_hit_data;
+
+      case (p1_offset[4:2])
+         3'b000: begin
+            w_hit_data[31:0] <= p1_data_i;
+         end
+         3'b001: begin
+            w_hit_data[63:32] <= r_hit_data;
+         end
+         3'b010: begin
+            w_hit_data[95:64] <= r_hit_data;
+         end
+         3'b011: begin
+            w_hit_data[127:96] <= r_hit_data;
+         end
+         3'b100: begin
+            w_hit_data[159:128] <= r_hit_data;
+         end
+         3'b101: begin
+            w_hit_data[191:160] <= r_hit_data;
+         end
+         3'b110: begin
+            w_hit_data[223:192] <= r_hit_data;
+         end
+         3'b111: begin
+            w_hit_data[255:224] <= r_hit_data;
+         end
+      endcase
    end
 
 
