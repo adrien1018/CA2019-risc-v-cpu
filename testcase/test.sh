@@ -37,7 +37,7 @@ jupiter --dump-code "$HEX" "$ASM"
     tr ' ' '0' |
     tail +3 > "$INS"
 rm "$HEX"
-vvp ../code/mytest.vvp "+file=$INS" 2> /dev/null |
+vvp mytest.vvp "+file=$INS" 2> /dev/null |
     sed 's/ \+/ /g; s/^ \| \(0x00000000 \)\?$//g' |
     tail +2 > "$RES1"
 rm "$INS"

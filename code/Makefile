@@ -1,5 +1,5 @@
 MODULES = CPU.v Adder.v PC.v Instruction_Memory.v Registers.v Control.v Sign_Extend.v MUX32.v ALU.v Data_Memory.v Branch_Decision.v Pipeline_Reg.v Hazard_Detection.v
-VVP = testbench.vvp mytest.vvp
+VVP = testbench.vvp ../testcase/mytest.vvp
 
 all: $(VVP)
 
