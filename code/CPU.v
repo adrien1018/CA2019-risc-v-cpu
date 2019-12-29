@@ -54,7 +54,7 @@ module CPU (
     .result (advance_pc_1)
   );
 
-  Instruction_Memory Instruction_Memory(
+  Instruction_Memory instruction_memory(
     .addr_i  (now_pc_1),
     .instr_o (instruction_1)
   );
@@ -110,7 +110,7 @@ module CPU (
   wire       prev_jalr;
   wire       next_nop;
 
-  Registers Registers(
+  Registers registers(
     .clk_i      (clk_i),
     .RS1addr_i  (instruction_2[19:15]),
     .RS2addr_i  (instruction_2[24:20]),
@@ -260,7 +260,7 @@ module CPU (
 
   wire [`REG_LEN-1:0] mem_data;
 
-  dcache_top dcache(
+  DCache_Top dcache(
     .clk_i          (clk_i),
     .rst_i          (rst_i),
     .mem_data_i     (mem_data_i),

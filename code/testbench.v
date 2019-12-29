@@ -33,7 +33,7 @@ CPU CPU(
   .mem_write_o  (cpu_mem_write)
 );
 
-Data_Memory Data_Memory(
+Data_Memory data_memory(
   .clk_i    (Clk),
   .rst_i    (Reset),
   .addr_i   (cpu_mem_addr),
@@ -50,20 +50,20 @@ initial begin
   counter = 0;
   // initialize instruction memory (1KB)
   for (i=0; i<=`IM_MASK; i=i+1) begin
-    CPU.Instruction_Memory.memory[i] = 32'b0;
+    CPU.instruction_memory.memory[i] = 32'b0;
   end
   // initialize data memory    (16KB)
   for (i=0; i<=`DM_MASK; i=i+1) begin
-    Data_Memory.memory[i] = 256'b0;
+    data_memory.memory[i] = 256'b0;
   end
   // initialize cache memory    (1KB)
   for (i=0; i<=`L1_INDEX_MASK; i=i+1) begin
-    CPU.dcache.dcache_tag_sram.memory[i] = 24'b0;
-    CPU.dcache.dcache_data_sram.memory[i] = 256'b0;
+    CPU.dcache.dcache_sram.tag_memory[i] = 24'b0;
+    CPU.dcache.dcache_sram.data_memory[i] = 256'b0;
   end
   // initialize Register File
   for (i=0; i<32; i=i+1) begin
-    CPU.Registers.register[i] = 32'b0;
+    CPU.registers.register[i] = 32'b0;
   end
   // initialize pipeline registers
   CPU.if_id.now_pc_o = 32'b0;
@@ -79,9 +79,9 @@ initial begin
 
   // Load instructions into instruction memory
   if ($value$plusargs("file=%s", file))
-    $readmemb(file, CPU.Instruction_Memory.memory);
+    $readmemb(file, CPU.instruction_memory.memory);
   else
-    $readmemb("../testdata/instruction.txt", CPU.Instruction_Memory.memory);
+    $readmemb("../testdata/instruction.txt", CPU.instruction_memory.memory);
 
   // Open output file
   outfile = $fopen("../testdata/output.txt");
@@ -90,7 +90,7 @@ initial begin
   //outfile2 = $fopen("../testdata/cache.txt") | 1;
 
   // Set Input n into data memory at 0x00
-  Data_Memory.memory[0] = 256'h5;        // n = 5 for example
+  data_memory.memory[0] = 256'h5;        // n = 5 for example
 
   Clk = 0;
   Reset = 0;
@@ -105,10 +105,10 @@ always@(posedge Clk) begin
   if(counter == 150) begin    // store cache to memory
     $fdisplay(outfile, "Flush Cache! \n");
     for(i=0; i<32; i=i+1) begin
-      tag = CPU.dcache.dcache_tag_sram.memory[i];
+      tag = CPU.dcache.dcache_sram.tag_memory[i];
       index = i;
       address = {tag[21:0], index};
-      Data_Memory.memory[address] = CPU.dcache.dcache_data_sram.memory[i];
+      data_memory.memory[address] = CPU.dcache.dcache_sram.data_memory[i];
     end
   end
   if(counter > 150) begin    // stop
@@ -118,39 +118,40 @@ always@(posedge Clk) begin
   // print PC
   $fdisplay(outfile, "cycle = %0d, Start = %b\nPC = %d", counter, Start, CPU.PC.pc_o);
 
-  $fdisplay(outfile, "read%b, write%b, p1_req%b, sram_tag = %x, cache_tag = %x, state = %d",
-      CPU.dcache.p1_MemRead_i,
-      CPU.dcache.p1_MemWrite_i,
-      CPU.dcache.p1_req,
-      CPU.dcache.sram_cache_tag,
-      CPU.dcache.cache_sram_tag,
-      CPU.dcache.state
-  );
+  if (0) begin // debug
+    $fdisplay(outfile, "read%b, write%b, p1_req%b, sram_tag = %x, cache_tag = %x, state = %d",
+        CPU.dcache.p1_MemRead_i,
+        CPU.dcache.p1_MemWrite_i,
+        CPU.dcache.p1_req,
+        CPU.dcache.sram_cache_tag,
+        CPU.dcache.cache_sram_tag,
+        CPU.dcache.state
+    );
+  end
 
   // print Registers
-  /*
   $fdisplay(outfile, "Registers");
-  $fdisplay(outfile, "x0 = %h, x8  = %h, x16 = %h, x24 = %h", CPU.Registers.register[0], CPU.Registers.register[8] , CPU.Registers.register[16], CPU.Registers.register[24]);
-  $fdisplay(outfile, "x1 = %h, x9  = %h, x17 = %h, x25 = %h", CPU.Registers.register[1], CPU.Registers.register[9] , CPU.Registers.register[17], CPU.Registers.register[25]);
-  $fdisplay(outfile, "x2 = %h, x10 = %h, x18 = %h, x26 = %h", CPU.Registers.register[2], CPU.Registers.register[10], CPU.Registers.register[18], CPU.Registers.register[26]);
-  $fdisplay(outfile, "x3 = %h, x11 = %h, x19 = %h, x27 = %h", CPU.Registers.register[3], CPU.Registers.register[11], CPU.Registers.register[19], CPU.Registers.register[27]);
-  $fdisplay(outfile, "x4 = %h, x12 = %h, x20 = %h, x28 = %h", CPU.Registers.register[4], CPU.Registers.register[12], CPU.Registers.register[20], CPU.Registers.register[28]);
-  $fdisplay(outfile, "x5 = %h, x13 = %h, x21 = %h, x29 = %h", CPU.Registers.register[5], CPU.Registers.register[13], CPU.Registers.register[21], CPU.Registers.register[29]);
-  $fdisplay(outfile, "x6 = %h, x14 = %h, x22 = %h, x30 = %h", CPU.Registers.register[6], CPU.Registers.register[14], CPU.Registers.register[22], CPU.Registers.register[30]);
-  $fdisplay(outfile, "x7 = %h, x15 = %h, x23 = %h, x31 = %h", CPU.Registers.register[7], CPU.Registers.register[15], CPU.Registers.register[23], CPU.Registers.register[31]);
+  $fdisplay(outfile, "x0 = %h, x8  = %h, x16 = %h, x24 = %h", CPU.registers.register[0], CPU.registers.register[8] , CPU.registers.register[16], CPU.registers.register[24]);
+  $fdisplay(outfile, "x1 = %h, x9  = %h, x17 = %h, x25 = %h", CPU.registers.register[1], CPU.registers.register[9] , CPU.registers.register[17], CPU.registers.register[25]);
+  $fdisplay(outfile, "x2 = %h, x10 = %h, x18 = %h, x26 = %h", CPU.registers.register[2], CPU.registers.register[10], CPU.registers.register[18], CPU.registers.register[26]);
+  $fdisplay(outfile, "x3 = %h, x11 = %h, x19 = %h, x27 = %h", CPU.registers.register[3], CPU.registers.register[11], CPU.registers.register[19], CPU.registers.register[27]);
+  $fdisplay(outfile, "x4 = %h, x12 = %h, x20 = %h, x28 = %h", CPU.registers.register[4], CPU.registers.register[12], CPU.registers.register[20], CPU.registers.register[28]);
+  $fdisplay(outfile, "x5 = %h, x13 = %h, x21 = %h, x29 = %h", CPU.registers.register[5], CPU.registers.register[13], CPU.registers.register[21], CPU.registers.register[29]);
+  $fdisplay(outfile, "x6 = %h, x14 = %h, x22 = %h, x30 = %h", CPU.registers.register[6], CPU.registers.register[14], CPU.registers.register[22], CPU.registers.register[30]);
+  $fdisplay(outfile, "x7 = %h, x15 = %h, x23 = %h, x31 = %h", CPU.registers.register[7], CPU.registers.register[15], CPU.registers.register[23], CPU.registers.register[31]);
 
   // print Data Memory
-  $fdisplay(outfile, "Data Memory: 0x0000 = %h", Data_Memory.memory[0]);
-  $fdisplay(outfile, "Data Memory: 0x0020 = %h", Data_Memory.memory[1]);
-  $fdisplay(outfile, "Data Memory: 0x0040 = %h", Data_Memory.memory[2]);
-  $fdisplay(outfile, "Data Memory: 0x0060 = %h", Data_Memory.memory[3]);
-  $fdisplay(outfile, "Data Memory: 0x0080 = %h", Data_Memory.memory[4]);
-  $fdisplay(outfile, "Data Memory: 0x00A0 = %h", Data_Memory.memory[5]);
-  $fdisplay(outfile, "Data Memory: 0x00C0 = %h", Data_Memory.memory[6]);
-  $fdisplay(outfile, "Data Memory: 0x00E0 = %h", Data_Memory.memory[7]);
-  $fdisplay(outfile, "Data Memory: 0x0400 = %h", Data_Memory.memory[32]);
+  $fdisplay(outfile, "Data Memory: 0x0000 = %h", data_memory.memory[0]);
+  $fdisplay(outfile, "Data Memory: 0x0020 = %h", data_memory.memory[1]);
+  $fdisplay(outfile, "Data Memory: 0x0040 = %h", data_memory.memory[2]);
+  $fdisplay(outfile, "Data Memory: 0x0060 = %h", data_memory.memory[3]);
+  $fdisplay(outfile, "Data Memory: 0x0080 = %h", data_memory.memory[4]);
+  $fdisplay(outfile, "Data Memory: 0x00A0 = %h", data_memory.memory[5]);
+  $fdisplay(outfile, "Data Memory: 0x00C0 = %h", data_memory.memory[6]);
+  $fdisplay(outfile, "Data Memory: 0x00E0 = %h", data_memory.memory[7]);
+  $fdisplay(outfile, "Data Memory: 0x0400 = %h", data_memory.memory[32]);
 
-  $fdisplay(outfile, "\n");*/
+  $fdisplay(outfile, "\n");
 
   // print Data Cache Status
   if(CPU.dcache.p1_stall_o && CPU.dcache.state==0) begin

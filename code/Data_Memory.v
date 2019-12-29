@@ -1,3 +1,5 @@
+// Note: macros for sizes moved to CPU.v
+
 `define LATENCY 10
 
 module Data_Memory (

@@ -1,3 +1,5 @@
+// Note: macros for sizes moved to CPU.v
+
 module Instruction_Memory (
   input  [`REG_LEN-1:0]  addr_i,
   output [`INSR_LEN-1:0] instr_o

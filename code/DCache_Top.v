@@ -4,7 +4,7 @@
 `define L1_INDEX_SIZE (`L1_SIZE-`DM_BYTE_UNIT)
 `define L1_INDEX_MASK ((1<<`L1_INDEX_SIZE)-1)
 
-module dcache_top(
+module DCache_Top(
   // System clock, start
   input                    clk_i,
   input                    rst_i,
@@ -156,28 +156,15 @@ assign    cache_dirty  = write_hit;
       end
    end
 
-//
-// Tag SRAM 0
-//
-dcache_tag_sram dcache_tag_sram(
-    .clk_i(clk_i),
-    .addr_i(cache_sram_index),
-    .data_i(cache_sram_tag),
-    .enable_i(cache_sram_enable),
-    .write_i(cache_sram_write),
-    .data_o(sram_cache_tag)
-);
-
-//
-// Data SRAM 0
-//
-dcache_data_sram dcache_data_sram(
-    .clk_i(clk_i),
-    .addr_i(cache_sram_index),
-    .data_i(cache_sram_data),
-    .enable_i(cache_sram_enable),
-    .write_i(cache_sram_write),
-    .data_o(sram_cache_data)
+DCache_SRAM dcache_sram(
+  .clk_i    (clk_i),
+  .addr_i   (cache_sram_index),
+  .data_i   (cache_sram_data),
+  .tag_i    (cache_sram_tag),
+  .enable_i (cache_sram_enable),
+  .write_i  (cache_sram_write),
+  .data_o   (sram_cache_data),
+  .tag_o    (sram_cache_tag)
 );
 
 endmodule
