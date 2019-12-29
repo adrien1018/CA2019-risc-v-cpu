@@ -75,11 +75,11 @@ assign    cache_sram_index  = p1_index;
 assign    cache_sram_enable = p1_req;
 assign    cache_sram_write  = cache_we | write_hit;
 assign    cache_sram_tag    = {1'b1, cache_dirty, p1_tag};
-assign    cache_sram_data   = (hit) ? w_hit_data : mem_data_i;
+assign    cache_sram_data   = hit ? w_hit_data : mem_data_i;
 
 // memory interface
 assign    mem_enable_o = mem_enable;
-assign    mem_addr_o   = (write_back) ? {sram_tag, p1_index, 5'b0} : {p1_tag, p1_index, 5'b0};
+assign    mem_addr_o   = write_back ? {sram_tag, p1_index, 5'b0} : {p1_tag, p1_index, 5'b0};
 assign    mem_data_o   = sram_cache_data;
 assign    mem_write_o  = mem_write;
 
@@ -117,6 +117,7 @@ assign    cache_dirty  = write_hit;
                 mem_enable <= 1'b1;
                 if(sram_dirty) begin
                   // write back if dirty
+                  write_back <= 1'b1;
                   mem_write <= 1'b1;
                   state <= STATE_WRITEBACK;
                 end
@@ -139,13 +140,11 @@ assign    cache_dirty  = write_hit;
               end
            end
            STATE_READMISSOK: begin
-              // wait for data memory acknowledge
               cache_we <= 1'b0;
               state <= STATE_IDLE;
            end
            STATE_WRITEBACK: begin
               if(mem_ack_i) begin
-                 // wait for data memory acknowledge
                  mem_enable <= 1'b1;
                  write_back <= 1'b0;
                  mem_write <= 1'b0;

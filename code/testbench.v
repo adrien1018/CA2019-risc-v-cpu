@@ -119,16 +119,18 @@ always@(posedge Clk) begin
   $fdisplay(outfile, "cycle = %0d, Start = %b\nPC = %d", counter, Start, CPU.PC.pc_o);
 
   if (0) begin // debug
-    $fdisplay(outfile, "read%b, write%b, p1_req%b, sram_tag = %x, cache_tag = %x, state = %d",
+    $fdisplay(outfile, "read%b, write%b, p1_req%b, memaddr %h, cache\n%h,%h\n%h,%h",
         CPU.dcache.p1_MemRead_i,
         CPU.dcache.p1_MemWrite_i,
         CPU.dcache.p1_req,
-        CPU.dcache.sram_cache_tag,
-        CPU.dcache.cache_sram_tag,
-        CPU.dcache.state
+        cpu_mem_addr,
+        CPU.dcache.dcache_sram.tag_memory[0],
+        CPU.dcache.dcache_sram.data_memory[0],
+        CPU.dcache.dcache_sram.tag_memory[1],
+        CPU.dcache.dcache_sram.data_memory[1],
     );
   end
-
+  else begin
   // print Registers
   $fdisplay(outfile, "Registers");
   $fdisplay(outfile, "x0 = %h, x8  = %h, x16 = %h, x24 = %h", CPU.registers.register[0], CPU.registers.register[8] , CPU.registers.register[16], CPU.registers.register[24]);
@@ -152,6 +154,7 @@ always@(posedge Clk) begin
   $fdisplay(outfile, "Data Memory: 0x0400 = %h", data_memory.memory[32]);
 
   $fdisplay(outfile, "\n");
+  end
 
   // print Data Cache Status
   if(CPU.dcache.p1_stall_o && CPU.dcache.state==0) begin
