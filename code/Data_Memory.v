@@ -25,7 +25,7 @@ module Data_Memory (
   reg       write;
 
   assign ack_o  = (state == STATE_WAIT) && (count == `LATENCY-1);
-  assign addr   = addr_i[`REG_LEN-1:`DM_BYTE_UNIT];
+  assign addr   = addr_i[`REG_LEN-1:`DM_BYTE_UNIT] & `DM_MASK;
   assign data_o = data;
 
   always @(negedge rst_i or posedge clk_i) begin

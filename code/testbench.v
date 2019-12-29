@@ -48,23 +48,20 @@ initial begin
   $dumpfile ("invchn26.vcd");
   $dumpvars;
   counter = 0;
-  // initialize instruction memory (1KB)
-  for (i=0; i<=`IM_MASK; i=i+1) begin
+  // initialize instruction memory
+  for (i=0; i<=`IM_MASK; i=i+1)
     CPU.instruction_memory.memory[i] = 32'b0;
-  end
-  // initialize data memory    (16KB)
-  for (i=0; i<=`DM_MASK; i=i+1) begin
+  // initialize data memory
+  for (i=0; i<=`DM_MASK; i=i+1)
     data_memory.memory[i] = 256'b0;
-  end
-  // initialize cache memory    (1KB)
+  // initialize cache memory
   for (i=0; i<=`L1_INDEX_MASK; i=i+1) begin
     CPU.dcache.dcache_sram.tag_memory[i] = 24'b0;
     CPU.dcache.dcache_sram.data_memory[i] = 256'b0;
   end
   // initialize Register File
-  for (i=0; i<32; i=i+1) begin
+  for (i=0; i<=`REG_NUM_MASK; i=i+1)
     CPU.registers.register[i] = 32'b0;
-  end
   // initialize pipeline registers
   CPU.if_id.now_pc_o = 32'b0;
   CPU.if_id.inst_o = 32'b10011; // NOP
