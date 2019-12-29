@@ -1,16 +1,16 @@
 module Registers (
-  input         clk_i,
-  input  [4:0]  RS1addr_i,
-  input  [4:0]  RS2addr_i,
-  input  [4:0]  RDaddr_i,
-  input  [31:0] RDdata_i,
-  input         RegWrite_i,
-  output [31:0] RS1data_o,
-  output [31:0] RS2data_o
+  input                      clk_i,
+  input  [`REG_NUM_BITS-1:0] RS1addr_i,
+  input  [`REG_NUM_BITS-1:0] RS2addr_i,
+  input  [`REG_NUM_BITS-1:0] RDaddr_i,
+  input  [`REG_LEN-1:0]      RDdata_i,
+  input                      RegWrite_i,
+  output [`REG_LEN-1:0]      RS1data_o,
+  output [`REG_LEN-1:0]      RS2data_o
 );
 
   // Register File
-  reg [31:0] register[0:31];
+  reg [`REG_LEN-1:0] register[0:`REG_NUM_MASK];
 
   // Read Data
   // assign RS1data_o = RS1addr_i == 5'b0 ? 32'b0 : register[RS1addr_i];

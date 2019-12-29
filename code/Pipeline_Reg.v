@@ -1,14 +1,14 @@
 module IF_ID (
-  input        clk,
-  input        mem_stall,
-  input [31:0] now_pc_i,
-  input [31:0] inst_i,
-  input        is_jalr_i,
-  input        nop_i,
-  input        stall,
-  output reg [31:0] now_pc_o,
-  output reg [31:0] inst_o,
-  output reg        prev_jalr_o
+  input                 clk,
+  input                 mem_stall,
+  input [`REG_LEN-1:0]  now_pc_i,
+  input [`INSR_LEN-1:0] inst_i,
+  input                 is_jalr_i,
+  input                 nop_i,
+  input                 stall,
+  output reg [`REG_LEN-1:0]  now_pc_o,
+  output reg [`INSR_LEN-1:0] inst_o,
+  output reg                 prev_jalr_o
 );
   always @(posedge clk) begin
     if (!stall && !mem_stall) begin
@@ -20,33 +20,33 @@ module IF_ID (
 endmodule
 
 module ID_EX (
-  input        clk,
-  input        mem_stall,
-  input [31:0] alu_1_opr_i,
-  input [31:0] alu_2_opr_i,
-  input [3:0]  alu_op_i,
-  input        alu_flag_i,
-  input [31:0] advance_pc_i,
-  input [31:0] reg_2_data_i,
-  input [4:0]  reg_addr_i,
-  input        mem_read_i,
-  input        mem_write_i,
-  input [1:0]  mem_width_i,
-  input        mem_sign_extend_i,
-  input [1:0]  reg_src_i,
-  input        nop_i,
-  output reg [31:0] alu_1_opr_o,
-  output reg [31:0] alu_2_opr_o,
-  output reg [3:0]  alu_op_o,
-  output reg        alu_flag_o,
-  output reg [31:0] advance_pc_o,
-  output reg [31:0] reg_2_data_o,
-  output reg [4:0]  reg_addr_o,
-  output reg        mem_read_o,
-  output reg        mem_write_o,
-  output reg [1:0]  mem_width_o,
-  output reg        mem_sign_extend_o,
-  output reg [1:0]  reg_src_o
+  input                     clk,
+  input                     mem_stall,
+  input [`REG_LEN-1:0]      alu_1_opr_i,
+  input [`REG_LEN-1:0]      alu_2_opr_i,
+  input [3:0]               alu_op_i,
+  input                     alu_flag_i,
+  input [`REG_LEN-1:0]      advance_pc_i,
+  input [`REG_LEN-1:0]      reg_2_data_i,
+  input [`REG_NUM_BITS-1:0] reg_addr_i,
+  input                     mem_read_i,
+  input                     mem_write_i,
+  input [1:0]               mem_width_i,
+  input                     mem_sign_extend_i,
+  input [1:0]               reg_src_i,
+  input                     nop_i,
+  output reg [`REG_LEN-1:0]      alu_1_opr_o,
+  output reg [`REG_LEN-1:0]      alu_2_opr_o,
+  output reg [3:0]               alu_op_o,
+  output reg                     alu_flag_o,
+  output reg [`REG_LEN-1:0]      advance_pc_o,
+  output reg [`REG_LEN-1:0]      reg_2_data_o,
+  output reg [`REG_NUM_BITS-1:0] reg_addr_o,
+  output reg                     mem_read_o,
+  output reg                     mem_write_o,
+  output reg [1:0]               mem_width_o,
+  output reg                     mem_sign_extend_o,
+  output reg [1:0]               reg_src_o
 );
   always @(posedge clk) begin
     if (!mem_stall) begin
@@ -67,26 +67,26 @@ module ID_EX (
 endmodule
 
 module EX_MEM (
-  input        clk,
-  input        mem_stall,
-  input [31:0] advance_pc_i,
-  input [31:0] alu_result_i,
-  input [31:0] reg_2_data_i,
-  input [4:0]  reg_addr_i,
-  input [1:0]  mem_width_i,
-  input        mem_sign_extend_i,
-  input [1:0]  reg_src_i,
-  input        mem_read_i,
-  input        mem_write_i,
-  output reg [31:0] advance_pc_o,
-  output reg [31:0] alu_result_o,
-  output reg [31:0] reg_2_data_o,
-  output reg [4:0]  reg_addr_o,
-  output reg [1:0]  mem_width_o,
-  output reg        mem_sign_extend_o,
-  output reg [1:0]  reg_src_o,
-  output reg        mem_read_o,
-  output reg        mem_write_o
+  input                     clk,
+  input                     mem_stall,
+  input [`REG_LEN-1:0]      advance_pc_i,
+  input [`REG_LEN-1:0]      alu_result_i,
+  input [`REG_LEN-1:0]      reg_2_data_i,
+  input [`REG_NUM_BITS-1:0] reg_addr_i,
+  input [1:0]               mem_width_i,
+  input                     mem_sign_extend_i,
+  input [1:0]               reg_src_i,
+  input                     mem_read_i,
+  input                     mem_write_i,
+  output reg [`REG_LEN-1:0]      advance_pc_o,
+  output reg [`REG_LEN-1:0]      alu_result_o,
+  output reg [`REG_LEN-1:0]      reg_2_data_o,
+  output reg [`REG_NUM_BITS-1:0] reg_addr_o,
+  output reg [1:0]               mem_width_o,
+  output reg                     mem_sign_extend_o,
+  output reg [1:0]               reg_src_o,
+  output reg                     mem_read_o,
+  output reg                     mem_write_o
 );
   always @(posedge clk) begin
     if (!mem_stall) begin
@@ -104,12 +104,12 @@ module EX_MEM (
 endmodule
 
 module MEM_WB (
-  input        clk,
-  input        mem_stall,
-  input [31:0] write_back_i,
-  input [4:0]  write_addr_i,
-  output reg [31:0] write_back_o,
-  output reg [4:0]  write_addr_o
+  input                     clk,
+  input                     mem_stall,
+  input [`REG_LEN-1:0]      write_back_i,
+  input [`REG_NUM_BITS-1:0] write_addr_i,
+  output reg [`REG_LEN-1:0]      write_back_o,
+  output reg [`REG_NUM_BITS-1:0] write_addr_o
 );
   always @(posedge clk) begin
     if (!mem_stall) begin

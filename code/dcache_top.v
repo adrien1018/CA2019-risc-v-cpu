@@ -1,77 +1,76 @@
+`define L1_SIZE 10
+`define L1_TAG_SIZE (`REG_LEN-`L1_SIZE)
+`define L1_TAG_MEM_SIZE (`L1_TAG_SIZE+2) // +valid/dirty bits
+`define L1_INDEX_SIZE (`L1_SIZE-`DM_BYTE_UNIT)
+`define L1_INDEX_MASK ((1<<`L1_INDEX_SIZE)-1)
 
 module dcache_top(
   // System clock, start
-  input               clk_i,
-  input               rst_i,
+  input                    clk_i,
+  input                    rst_i,
   // to Data Memory interface
-  input  [256-1:0]    mem_data_i,
-  input               mem_ack_i,
-  output [256-1:0]    mem_data_o,
-  output [32-1:0]     mem_addr_o,
-  output              mem_enable_o,
-  output              mem_write_o,
+  input  [`DM_UNIT_MASK:0] mem_data_i,
+  input                    mem_ack_i,
+  output [`DM_UNIT_MASK:0] mem_data_o,
+  output [`REG_LEN-1:0]    mem_addr_o,
+  output                   mem_enable_o,
+  output                   mem_write_o,
   // to core interface
-  input  [32-1:0]     p1_data_i,
-  input  [32-1:0]     p1_addr_i,
-  input               p1_MemRead_i,
-  input               p1_MemWrite_i,
-  output [32-1:0]     p1_data_o,
-  output              p1_stall_o
+  input  [`REG_LEN-1:0] p1_data_i,
+  input  [`REG_LEN-1:0] p1_addr_i,
+  input                 p1_MemRead_i,
+  input                 p1_MemWrite_i,
+  output [`REG_LEN-1:0] p1_data_o,
+  output                p1_stall_o
 );
 
-//
-// to SRAM interface
-//
-wire    [4:0]         cache_sram_index;
-wire                  cache_sram_enable;
-wire    [23:0]        cache_sram_tag;
-wire    [255:0]       cache_sram_data;
-wire                  cache_sram_write;
-wire    [23:0]        sram_cache_tag;
-wire    [255:0]       sram_cache_data;
-
-// cache
-wire                  sram_valid;
-wire                  sram_dirty;
+wire [`DM_BYTE_UNIT-1:0]    cache_sram_index;
+wire                        cache_sram_enable;
+wire [`L1_TAG_MEM_SIZE-1:0] cache_sram_tag;
+wire [`DM_UNIT_MASK:0]      cache_sram_data;
+wire                        cache_sram_write;
+wire [`L1_TAG_MEM_SIZE-1:0] sram_cache_tag;
+wire [`DM_UNIT_MASK:0]      sram_cache_data;
+wire                        sram_valid;
+wire                        sram_dirty;
 
 // controller
-parameter             STATE_IDLE         = 2'h0,
-                      STATE_READMISS     = 2'h1,
-                      STATE_READMISSOK   = 2'h2,
-                      STATE_WRITEBACK    = 2'h3;
-reg     [1:0]         state;
-reg                   mem_enable;
-reg                   mem_write;
-reg                   cache_we;
-wire                  cache_dirty;
-reg                   write_back;
+parameter STATE_IDLE       = 2'h0,
+          STATE_READMISS   = 2'h1,
+          STATE_READMISSOK = 2'h2,
+          STATE_WRITEBACK  = 2'h3;
+reg [1:0] state;
+reg       mem_enable;
+reg       mem_write;
+reg       cache_we;
+wire      cache_dirty;
+reg       write_back;
 
 // regs & wires
-wire    [4:0]         p1_offset;
-wire    [4:0]         p1_index;
-wire    [21:0]        p1_tag;
-wire    [255:0]       r_hit_data;
-wire    [21:0]        sram_tag;
-wire                  hit;
-//reg hit;
-reg     [255:0]       w_hit_data;
-wire                  write_hit;
-wire                  p1_req;
-reg     [31:0]        p1_data;
+wire    [`DM_BYTE_UNIT-1:0]  p1_offset;
+wire    [`L1_INDEX_SIZE-1:0] p1_index;
+wire    [`L1_TAG_SIZE-1:0]   p1_tag;
+wire    [`DM_UNIT_MASK:0]    r_hit_data;
+wire    [`L1_TAG_SIZE-1:0]   sram_tag;
+wire                         hit;
+reg     [`DM_UNIT_MASK:0]    w_hit_data;
+wire                         write_hit;
+wire                         p1_req;
+reg     [`REG_LEN-1:0]       p1_data;
 
 // project1 interface
 assign    p1_req     = p1_MemRead_i | p1_MemWrite_i;
-assign    p1_offset  = p1_addr_i[4:0];
-assign    p1_index   = p1_addr_i[9:5];
-assign    p1_tag     = p1_addr_i[31:10];
+assign    p1_offset  = p1_addr_i[`DM_BYTE_UNIT-1:0];
+assign    p1_index   = p1_addr_i[`L1_SIZE-1:`DM_BYTE_UNIT];
+assign    p1_tag     = p1_addr_i[`REG_LEN-1:`L1_SIZE];
 assign    p1_stall_o = ~hit & p1_req;
 //assign    p1_data_o  = r_hit_data >> (32 * p1_offset);
 assign    p1_data_o  = p1_data;
 
 // SRAM interface
-assign    sram_valid = sram_cache_tag[23];
-assign    sram_dirty = sram_cache_tag[22];
-assign    sram_tag   = sram_cache_tag[21:0];
+assign    sram_valid = sram_cache_tag[`L1_TAG_SIZE+1];
+assign    sram_dirty = sram_cache_tag[`L1_TAG_SIZE];
+assign    sram_tag   = sram_cache_tag[`L1_TAG_SIZE-1:0];
 assign    cache_sram_index  = p1_index;
 assign    cache_sram_enable = p1_req;
 assign    cache_sram_write  = cache_we | write_hit;

@@ -5,8 +5,8 @@ VVP = testbench.vvp # ../testcase/mytest.vvp
 
 all: $(VVP)
 
-$(VVP): %.vvp: %.v $(MODULES) Opcode.v
-	iverilog -Wall -pfileline=1 -o $@ $^
+$(VVP): %.vvp: $(MODULES) %.v Opcode.v
+	iverilog -Wall -o $@ $^
 
 clean:
 	rm -f $(VVP)

@@ -1,6 +1,6 @@
 module Immediate_Gen (
-  input  [31:0] insr,
-  output [31:0] result
+  input  [`INSR_LEN-1:0] insr,
+  output [`INSR_LEN-1:0] result
 );
   assign result = insr[4:2] == 3'b101 ? {insr[31:12], 12'b0} : // U-type
                   insr[3:2] == 2'b11 ? // J-type

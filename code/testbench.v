@@ -12,12 +12,12 @@ reg  [23:0]   tag;
 reg  [4:0]    index;
 reg  [1023:0] file;
 
-wire [255:0]  mem_cpu_data;
-wire          mem_cpu_ack;
-wire [255:0]  cpu_mem_data;
-wire [31:0]   cpu_mem_addr;
-wire          cpu_mem_enable;
-wire          cpu_mem_write;
+wire [`DM_UNIT_MASK:0] mem_cpu_data;
+wire                   mem_cpu_ack;
+wire [`DM_UNIT_MASK:0] cpu_mem_data;
+wire [`REG_LEN-1:0]    cpu_mem_addr;
+wire                   cpu_mem_enable;
+wire                   cpu_mem_write;
 
 always #(`CYCLE_TIME/2) Clk = ~Clk;
 
@@ -49,15 +49,15 @@ initial begin
   $dumpvars;
   counter = 0;
   // initialize instruction memory (1KB)
-  for (i=0; i<255; i=i+1) begin
+  for (i=0; i<=`IM_MASK; i=i+1) begin
     CPU.Instruction_Memory.memory[i] = 32'b0;
   end
   // initialize data memory    (16KB)
-  for (i=0; i<512; i=i+1) begin
+  for (i=0; i<=`DM_MASK; i=i+1) begin
     Data_Memory.memory[i] = 256'b0;
   end
   // initialize cache memory    (1KB)
-  for (i=0; i<32; i=i+1) begin
+  for (i=0; i<=`L1_INDEX_MASK; i=i+1) begin
     CPU.dcache.dcache_tag_sram.memory[i] = 24'b0;
     CPU.dcache.dcache_data_sram.memory[i] = 256'b0;
   end

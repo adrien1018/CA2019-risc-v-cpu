@@ -1,18 +1,18 @@
 `include "Opcode.v"
 
 module Hazard_Detection (
-  input        clk,
-  input [31:0] id_insr,
-  input [4:0]  rd_3,
-  input [1:0]  reg_src_3,
-  input        mem_write_3,
-  input [4:0]  rd_4,
-  output       hazard_stall,
-  output reg   fw_dm_alu,
-  output       fw_alu_reg1,
-  output       fw_alu_reg2,
-  output       fw_dm_reg1,
-  output       fw_dm_reg2
+  input                 clk,
+  input [`INSR_LEN-1:0] id_insr,
+  input [4:0] rd_3,
+  input [1:0] reg_src_3,
+  input       mem_write_3,
+  input [4:0] rd_4,
+  output      hazard_stall,
+  output reg  fw_dm_alu,
+  output      fw_alu_reg1,
+  output      fw_alu_reg2,
+  output      fw_dm_reg1,
+  output      fw_dm_reg2
 );
 
   wire [6:0] id_opcode = id_insr[6:0];

@@ -1,29 +1,43 @@
+`define REG_LEN 32
+`define INSR_LEN 32
+`define REG_NUM_BITS 5
+`define REG_NUM_MASK ((1<<`REG_NUM_BITS)-1)
+
+`define DM_BITS 14 // 16 KiB
+`define DM_UNIT 8 // 256 bits = 32 bytes
+`define DM_BYTE_UNIT (`DM_UNIT-3)
+`define DM_MASK ((1<<(`DM_BITS-`DM_BYTE_UNIT))-1)
+`define DM_UNIT_MASK ((1<<`DM_UNIT)-1)
+
+`define IM_BITS 8 // 1 KiB
+`define IM_MASK ((1<<`IM_BITS)-1)
+
 module CPU (
   input clk_i,
   input rst_i,
   input start_i,
   // memory interface
-  input  [255:0] mem_data_i,
-  input          mem_ack_i,
-  output [255:0] mem_data_o,
-  output [31:0]  mem_addr_o,
-  output         mem_enable_o,
-  output         mem_write_o
+  input  [`DM_UNIT_MASK:0] mem_data_i,
+  input                    mem_ack_i,
+  output [`DM_UNIT_MASK:0] mem_data_o,
+  output [`REG_LEN-1:0]    mem_addr_o,
+  output                   mem_enable_o,
+  output                   mem_write_o
 );
 
   wire mem_stall_4; // memory stall from stage 4
 
   // ----- Instruction fetch stage -----
   // . <-
-  wire [31:0] jump_pc_back1; // from stage 2
-  wire [31:0] jalr_pc_back1; // from stage 3
+  wire [`REG_LEN-1:0] jump_pc_back1; // from stage 2
+  wire [`REG_LEN-1:0] jalr_pc_back1; // from stage 3
   wire [1:0]  next_pc_control_back1; // from stage 2
   // . ->
-  wire [31:0] now_pc_1;
-  wire [31:0] advance_pc_1;
-  wire [31:0] instruction_1;
+  wire [`REG_LEN-1:0]  now_pc_1;
+  wire [`REG_LEN-1:0]  advance_pc_1;
+  wire [`INSR_LEN-1:0] instruction_1;
 
-  wire [31:0] next_pc;
+  wire [`REG_LEN-1:0] next_pc;
 
   PC PC(
     .clk_i       (clk_i),
@@ -56,45 +70,45 @@ module CPU (
 
   // ----- Register read stage & writeback -----
   // . <-
-  wire [4:0]  reg_write_addr_back2; // from stage 5
-  wire [31:0] reg_write_data_back2; // from stage 5
-  wire [31:0] fw_alu_back2;         // from stage 3
-  wire [31:0] fw_dm_back2;          // from stage 4
+  wire [`REG_NUM_BITS-1:0] reg_write_addr_back2; // from stage 5
+  wire [`REG_LEN-1:0]      reg_write_data_back2; // from stage 5
+  wire [`REG_LEN-1:0]      fw_alu_back2;         // from stage 3
+  wire [`REG_LEN-1:0]      fw_dm_back2;          // from stage 4
   // -> .
-  wire [31:0] now_pc_2;
-  wire [31:0] instruction_2;
+  wire [`REG_LEN-1:0]      now_pc_2;
+  wire [`INSR_LEN-1:0]     instruction_2;
   // . ->
-  wire [31:0] alu_1_opr_2;
-  wire [31:0] alu_2_opr_2;
-  wire [3:0]  alu_op_2;
-  wire        alu_flag_2;
-  wire [4:0]  reg_addr_2;
-  wire        mem_read_2;
-  wire        mem_write_2;
-  wire [1:0]  mem_width_2;
-  wire        mem_sign_extend_2;
-  wire [1:0]  reg_src_2;
-  wire [31:0] reg_2_data_2;
-  wire [31:0] advance_pc_2;
+  wire [`REG_LEN-1:0]      alu_1_opr_2;
+  wire [`REG_LEN-1:0]      alu_2_opr_2;
+  wire [3:0]               alu_op_2;
+  wire                     alu_flag_2;
+  wire [`REG_NUM_BITS-1:0] reg_addr_2;
+  wire                     mem_read_2;
+  wire                     mem_write_2;
+  wire [1:0]               mem_width_2;
+  wire                     mem_sign_extend_2;
+  wire [1:0]               reg_src_2;
+  wire [`REG_LEN-1:0]      reg_2_data_2;
+  wire [`REG_LEN-1:0]      advance_pc_2;
   // from hazard detection
-  wire        fw_dm_reg1,  fw_dm_reg2;
-  wire        fw_alu_reg1, fw_alu_reg2;
+  wire fw_dm_reg1,  fw_dm_reg2;
+  wire fw_alu_reg1, fw_alu_reg2;
 
-  wire [31:0] branch_target;
-  wire [31:0] imm;
-  wire [31:0] reg_1_data;
-  wire [31:0] reg_1_data_file;
-  wire [31:0] reg_2_data_file;
-  wire [1:0]  alu_1_src;
-  wire        alu_2_src_2;
-  wire [1:0]  alu_control;
-  wire        reg_write;
-  wire        taken;
-  wire        is_branch;
-  wire        is_jal;
-  wire        is_jalr;
-  wire        prev_jalr;
-  wire        next_nop;
+  wire [`REG_LEN-1:0] branch_target;
+  wire [`REG_LEN-1:0] imm;
+  wire [`REG_LEN-1:0] reg_1_data;
+  wire [`REG_LEN-1:0] reg_1_data_file;
+  wire [`REG_LEN-1:0] reg_2_data_file;
+  wire [1:0] alu_1_src;
+  wire       alu_2_src_2;
+  wire [1:0] alu_control;
+  wire       reg_write;
+  wire       taken;
+  wire       is_branch;
+  wire       is_jal;
+  wire       is_jalr;
+  wire       prev_jalr;
+  wire       next_nop;
 
   Registers Registers(
     .clk_i      (clk_i),
@@ -189,26 +203,26 @@ module CPU (
 
   // ----- ALU stage -----
   // . <-
-  wire [31:0] fw_dm_back3; // from stage 4
+  wire [`REG_LEN-1:0] fw_dm_back3; // from stage 4
   // -> .
-  wire [31:0] alu_1_opr_3;
-  wire [31:0] alu_2_opr_3;
-  wire [31:0] reg_2_data_3_flow;
+  wire [`REG_LEN-1:0] alu_1_opr_3;
+  wire [`REG_LEN-1:0] alu_2_opr_3;
+  wire [`REG_LEN-1:0] reg_2_data_3_flow;
   wire [3:0]  alu_op_3;
   wire        alu_flag_3;
   wire        alu_2_src_3;
   wire        is_reg1;
   // -> . ->
-  wire [31:0] advance_pc_3;
-  wire [4:0]  reg_addr_3;
-  wire        mem_read_3;
-  wire        mem_write_3;
-  wire [1:0]  mem_width_3;
-  wire        mem_sign_extend_3;
-  wire [1:0]  reg_src_3;
+  wire [`REG_LEN-1:0]      advance_pc_3;
+  wire [`REG_NUM_BITS-1:0] reg_addr_3;
+  wire                     mem_read_3;
+  wire                     mem_write_3;
+  wire [1:0]               mem_width_3;
+  wire                     mem_sign_extend_3;
+  wire [1:0]               reg_src_3;
   // . ->
-  wire [31:0] alu_result_3;
-  wire [31:0] reg_2_data_3;
+  wire [`REG_LEN-1:0] alu_result_3;
+  wire [`REG_LEN-1:0] reg_2_data_3;
   // from hazard detection
   wire        fw_dm_alu;
 
@@ -232,19 +246,19 @@ module CPU (
 
   // ----- Data write stage -----
   // -> .
-  wire [31:0] advance_pc_4;
-  wire [31:0] alu_result_4;
-  wire [31:0] reg_2_data_4;
-  wire [4:0]  reg_addr_4;
-  wire [1:0]  mem_width_4;
-  wire        mem_sign_extend_4;
-  wire [1:0]  reg_src_4;
-  wire        mem_read_4;
-  wire        mem_write_4;
+  wire [`REG_LEN-1:0]      advance_pc_4;
+  wire [`REG_LEN-1:0]      alu_result_4;
+  wire [`REG_LEN-1:0]      reg_2_data_4;
+  wire [`REG_NUM_BITS-1:0] reg_addr_4;
+  wire [1:0]               mem_width_4;
+  wire                     mem_sign_extend_4;
+  wire [1:0]               reg_src_4;
+  wire                     mem_read_4;
+  wire                     mem_write_4;
   // . ->
-  wire [31:0] reg_write_data_4;
+  wire [`REG_LEN-1:0] reg_write_data_4;
 
-  wire [31:0] mem_data;
+  wire [`REG_LEN-1:0] mem_data;
 
   dcache_top dcache(
     .clk_i          (clk_i),
@@ -283,7 +297,7 @@ module CPU (
 
   // ----- Write back stage -----
   // -> . ->
-  wire [31:0] reg_write_data_5;
+  wire [`REG_LEN-1:0] reg_write_data_5;
   wire [4:0] reg_addr_5;
   assign reg_write_addr_back2 = reg_addr_5;
   assign reg_write_data_back2 = reg_write_data_5;
