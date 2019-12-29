@@ -16,24 +16,15 @@ module DCache_Top(
   output                   mem_enable_o,
   output                   mem_write_o,
   // to core interface
-  input  [`REG_LEN-1:0] p1_data_i,
-  input  [`REG_LEN-1:0] p1_addr_i,
-  input                 p1_MemRead_i,
-  input                 p1_MemWrite_i,
-  output [`REG_LEN-1:0] p1_data_o,
-  output                p1_stall_o
+  input  [`REG_LEN-1:0] data_i,
+  input  [`REG_LEN-1:0] addr_i,
+  input                 MemRead_i,
+  input                 MemWrite_i,
+  input  [1:0]          width,
+  input                 sign_extend,
+  output [`REG_LEN-1:0] data_o,
+  output                stall_o
 );
-
-  wire [`DM_BYTE_UNIT-1:0]    cache_sram_index;
-  wire                        cache_sram_enable;
-  wire [`L1_TAG_MEM_SIZE-1:0] cache_sram_tag;
-  wire [`DM_UNIT_MASK:0]      cache_sram_data;
-  wire                        cache_sram_write;
-  wire [`L1_TAG_MEM_SIZE-1:0] sram_cache_tag;
-  wire [`DM_UNIT_MASK:0]      sram_cache_data;
-  wire                        sram_valid;
-  wire                        sram_dirty;
-
   // controller
   parameter STATE_IDLE       = 2'h0,
             STATE_READMISS   = 2'h1,
@@ -43,61 +34,78 @@ module DCache_Top(
   reg       mem_enable;
   reg       mem_write;
   reg       cache_we;
-  wire      cache_dirty;
   reg       write_back;
 
   // regs & wires
-  wire [`DM_BYTE_UNIT-1:0]  p1_offset;
-  wire [`L1_INDEX_SIZE-1:0] p1_index;
-  wire [`L1_TAG_SIZE-1:0]   p1_tag;
-  wire [`DM_UNIT_MASK:0]    r_hit_data;
-  wire [`L1_TAG_SIZE-1:0]   sram_tag;
-  wire                      hit;
-  reg  [`DM_UNIT_MASK:0]    w_hit_data;
-  wire                      write_hit;
-  wire                      p1_req;
-  reg  [`REG_LEN-1:0]       p1_data;
+  reg  [`DM_UNIT_MASK:0]      w_hit_data; //
+  reg  [`REG_LEN-1:0]         data;       // use reg for simpler code
+  wire [`L1_TAG_MEM_SIZE-1:0] sram_cache_tag;
+  wire [`DM_UNIT_MASK:0]      sram_cache_data;
 
-  // project1 interface
-  assign p1_req     = p1_MemRead_i | p1_MemWrite_i;
-  assign p1_offset  = p1_addr_i[`DM_BYTE_UNIT-1:0];
-  assign p1_index   = p1_addr_i[`L1_SIZE-1:`DM_BYTE_UNIT];
-  assign p1_tag     = p1_addr_i[`REG_LEN-1:`L1_SIZE];
-  assign p1_stall_o = ~hit & p1_req;
-  assign p1_data_o  = p1_data;
+  // unaligned access
+  reg  unalign_second;
+  wire is_unalign = {1'b0, offset} + (1 << width) > (1 << `DM_BYTE_UNIT);
+  wire [`REG_LEN-1:0] addr = unalign_second ?
+                             addr_i + (1 << `DM_BYTE_UNIT) : addr_i;
 
-  // SRAM interface
-  assign sram_valid = sram_cache_tag[`L1_TAG_SIZE+1];
-  assign sram_dirty = sram_cache_tag[`L1_TAG_SIZE];
-  assign sram_tag   = sram_cache_tag[`L1_TAG_SIZE-1:0];
-  assign cache_sram_index  = p1_index;
-  assign cache_sram_enable = p1_req;
-  assign cache_sram_write  = cache_we | write_hit;
-  assign cache_sram_tag    = {1'b1, cache_dirty, p1_tag};
-  assign cache_sram_data   = hit ? w_hit_data : mem_data_i;
+  wire                      req    = MemRead_i | MemWrite_i;
+  wire [`DM_BYTE_UNIT-1:0]  offset = addr[`DM_BYTE_UNIT-1:0];
+  wire [`L1_INDEX_SIZE-1:0] index  = addr[`L1_SIZE-1:`DM_BYTE_UNIT];
+  wire [`L1_TAG_SIZE-1:0]   tag    = addr[`REG_LEN-1:`L1_SIZE];
+
+  assign stall_o = (~hit | (is_unalign & ~unalign_second)) & req;
+  assign data_o =
+      width == 2'b10 ? data :
+      width == 2'b01 ? {{16{sign_extend & data[15]}}, data[15:0]} :
+      width == 2'b00 ? {{24{sign_extend & data[7]}},  data[7:0]} : 0;
+
+  // SRAM
+  wire                        sram_valid = sram_cache_tag[`L1_TAG_SIZE+1];
+  wire                        sram_dirty = sram_cache_tag[`L1_TAG_SIZE];
+  wire [`L1_TAG_SIZE-1:0]     sram_tag   = sram_cache_tag[`L1_TAG_SIZE-1:0];
+  wire [`DM_BYTE_UNIT-1:0]    cache_sram_index  = index;
+  wire                        cache_sram_enable = req;
+  wire                        cache_sram_write  = cache_we | write_hit;
+  wire [`L1_TAG_MEM_SIZE-1:0] cache_sram_tag    = {1'b1, cache_dirty, tag};
+  wire [`DM_UNIT_MASK:0]      cache_sram_data   = hit ? w_hit_data : mem_data_i;
 
   // memory interface
   assign mem_enable_o = mem_enable;
-  assign mem_addr_o   = write_back ? {sram_tag, p1_index, 5'b0} : {p1_tag, p1_index, 5'b0};
+  assign mem_addr_o   = write_back ? {sram_tag, index, 5'b0} : {tag, index, 5'b0};
   assign mem_data_o   = sram_cache_data;
   assign mem_write_o  = mem_write;
 
-  assign write_hit    = hit & p1_MemWrite_i;
-  assign cache_dirty  = write_hit;
+  wire                   write_hit   = hit & MemWrite_i;
+  wire                   cache_dirty = write_hit;
+  wire                   hit         = sram_valid && sram_tag == tag;
+  wire [`DM_UNIT_MASK:0] r_hit_data  = sram_cache_data;
 
-    // tag comparator
-  assign hit = sram_valid && sram_tag == p1_tag;
-  assign r_hit_data = sram_cache_data;
-
-  // read data :  256-bit to 32-bit
-  always @(p1_offset or r_hit_data) begin
-    p1_data <= r_hit_data >> (8 * p1_offset);
+  always @* begin // combo logic
+    if (unalign_second) begin
+      case (addr[1:0])
+        2'b01: data[31:24] <= r_hit_data[7:0];
+        2'b10: data[31:16] <= r_hit_data[15:0];
+        2'b11: data[31:8]  <= r_hit_data[23:0];
+      endcase
+    end else begin
+      data <= r_hit_data >> (8 * offset);
+    end
   end
 
-  // write data :  32-bit to 256-bit
-  always @(p1_offset or r_hit_data or p1_data_i) begin
-    w_hit_data <= (r_hit_data & ~(256'hffffffff << (8 * p1_offset))) |
-        {224'b0, p1_data_i} << (8 * p1_offset);
+  wire [`DM_UNIT_MASK:0] write_mask =
+      width == 2'b10 ? 256'hffffffff :
+      width == 2'b01 ? 256'hffff :
+      width == 2'b00 ? 256'hff : 0;
+  wire [`DM_UNIT-1:0] write_shift = unalign_second ?
+                                    8'h8 * (4 - offset[1:0]) : 8'h8 * offset;
+  always @* begin // combo logic
+    if (unalign_second) begin
+      w_hit_data <= (r_hit_data & ~(write_mask >> write_shift)) |
+          (data_i & write_mask) >> write_shift;
+    end else begin
+      w_hit_data <= (r_hit_data & ~(write_mask << write_shift)) |
+          (data_i & write_mask) << write_shift;
+    end
   end
 
   // controller
@@ -108,21 +116,26 @@ module DCache_Top(
       mem_write  <= 1'b0;
       cache_we   <= 1'b0;
       write_back <= 1'b0;
+      unalign_second <= 1'b0;
     end else begin
       case (state)
         STATE_IDLE: begin
-          if (p1_req && !hit) begin
-            mem_enable <= 1'b1;
-            if(sram_dirty) begin
-              // write back if dirty
-              write_back <= 1'b1;
-              mem_write <= 1'b1;
-              state <= STATE_WRITEBACK;
+          if (req) begin
+            if (hit) begin
+              if (is_unalign) unalign_second <= unalign_second ^ 1'b1;
             end else begin
-              // write allocate
-              write_back <= 1'b0;
-              mem_write <= 1'b0;
-              state <= STATE_READMISS;
+              mem_enable <= 1'b1;
+              if (sram_dirty) begin
+                // write back if dirty
+                write_back <= 1'b1;
+                mem_write <= 1'b1;
+                state <= STATE_WRITEBACK;
+              end else begin
+                // write allocate
+                write_back <= 1'b0;
+                mem_write <= 1'b0;
+                state <= STATE_READMISS;
+              end
             end
           end
         end

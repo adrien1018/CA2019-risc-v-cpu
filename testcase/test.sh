@@ -50,6 +50,8 @@ cmp "$RES1" "$RES2"
 if [ $? -ne 0 ]; then
   echo 'Instructions:' > error.log
   cat "$ASM" >> error.log
+  echo 'Diff:' >> error.log
+  diff "$RES2" "$RES1" >> error.log
   echo 'Expected:' >> error.log
   cat "$RES2" >> error.log
   echo 'Got:' >> error.log

@@ -8,7 +8,7 @@ const std::string s1[] = {"add", "sub", "or", "and", "mul",
 const std::string s2[] = {"addi", "xori", "ori", "andi", "slti", "sltiu"};
 const std::string s3[] = {"slli", "srli", "srai"};
 const std::string s4[] = {"beq", "bne", "blt", "bge", "bltu", "bgeu"};
-const std::string s5[] = {"lw","sw"};//{"lb", "lh", "lw", "lbu", "lhu", "sb", "sh", "sw"};
+const std::string s5[] = {"lb", "lh", "lw", "lbu", "lhu", "sb", "sh", "sw"};
 const std::string s6[] = {"lui", "auipc"};
 
 const int Nregs = sizeof(regs) / sizeof(*regs);
@@ -36,7 +36,8 @@ int main(int argc, char** argv) {
     }
     printf("addi %s, %s, %d\n", regs[i].c_str(), regs[i].c_str(), mrand(-Range, Range - 1)(gen));
   }
-  printf("addi sp, sp, -32\n");
+  printf("addi sp, sp, -1016\n"); // move to cache line boundary
+  printf("addi sp, sp, -1024\n");
   for (int i = 0, flag = 0; i < Ninsr; i++, flag--) {
     printf("L%03d: ", i);
     int c = mrand(0, 12)(gen);
@@ -76,8 +77,7 @@ int main(int argc, char** argv) {
     } else if (c < 12) {
       printf("%s %s, %d(sp)\n", s5[mrand(0, Ns5 - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),
-          //mrand(0, 20)(gen));
-          mrand(0, 4)(gen)*4);
+          mrand(0, 1)(gen) ? mrand(0, 20)(gen) : mrand(1024, 1044)(gen));
     } else if (c < 13) {
       printf("%s %s, %d\n", s6[mrand(0, Ns6 - 1)(gen)].c_str(),
           regs[mrand(0, Nregs - 1)(gen)].c_str(),

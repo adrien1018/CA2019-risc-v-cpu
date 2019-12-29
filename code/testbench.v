@@ -81,10 +81,8 @@ initial begin
     $readmemb("../testdata/instruction.txt", CPU.instruction_memory.memory);
 
   // Open output file
-  outfile = $fopen("../testdata/output.txt");
-  outfile2 = $fopen("../testdata/cache.txt");
-  //outfile = $fopen("../testdata/output.txt") | 1;
-  //outfile2 = $fopen("../testdata/cache.txt") | 1;
+  outfile = $fopen("../testdata/output.txt") | 1;
+  outfile2 = $fopen("../testdata/cache.txt") | 1;
 
   // Set Input n into data memory at 0x00
   data_memory.memory[0] = 256'h5;        // n = 5 for example
@@ -116,15 +114,18 @@ always@(posedge Clk) begin
   $fdisplay(outfile, "cycle = %0d, Start = %b\nPC = %d", counter, Start, CPU.PC.pc_o);
 
   if (0) begin // debug
-    $fdisplay(outfile, "read%b, write%b, p1_req%b, memaddr %h, cache\n%h,%h\n%h,%h",
-        CPU.dcache.p1_MemRead_i,
-        CPU.dcache.p1_MemWrite_i,
-        CPU.dcache.p1_req,
-        cpu_mem_addr,
+    $fdisplay(outfile, "read%b, write%b, state%h, unalign_sec%b, hit%b, addr %h, width %b, cache\n%h,%h\n%h,%h",
+        CPU.dcache.MemRead_i,
+        CPU.dcache.MemWrite_i,
+        CPU.dcache.state,
+        CPU.dcache.unalign_second,
+        CPU.dcache.hit,
+        CPU.dcache.addr,
+        CPU.dcache.width,
         CPU.dcache.dcache_sram.tag_memory[0],
         CPU.dcache.dcache_sram.data_memory[0],
-        CPU.dcache.dcache_sram.tag_memory[1],
-        CPU.dcache.dcache_sram.data_memory[1],
+        CPU.dcache.dcache_sram.tag_memory[31],
+        CPU.dcache.dcache_sram.data_memory[31],
     );
   end
   else begin
@@ -154,27 +155,27 @@ always@(posedge Clk) begin
   end
 
   // print Data Cache Status
-  if(CPU.dcache.p1_stall_o && CPU.dcache.state==0) begin
+  if(CPU.dcache.stall_o && CPU.dcache.state==0) begin
     if(CPU.dcache.sram_dirty) begin
-      if(CPU.dcache.p1_MemWrite_i)
-        $fdisplay(outfile2, "Cycle: %d, Write Miss, Address: %h, Write Data: %h (Write Back!)", counter, CPU.dcache.p1_addr_i, CPU.dcache.p1_data_i);
-      else if(CPU.dcache.p1_MemRead_i)
-        $fdisplay(outfile2, "Cycle: %d, Read Miss , Address: %h, Read Data : %h (Write Back!)", counter, CPU.dcache.p1_addr_i, CPU.dcache.p1_data_o);
+      if(CPU.dcache.MemWrite_i)
+        $fdisplay(outfile2, "Cycle: %d, Write Miss, Address: %h, Write Data: %h (Write Back!)", counter, CPU.dcache.addr_i, CPU.dcache.data_i);
+      else if(CPU.dcache.MemRead_i)
+        $fdisplay(outfile2, "Cycle: %d, Read Miss , Address: %h, Read Data : %h (Write Back!)", counter, CPU.dcache.addr_i, CPU.dcache.data_o);
     end
     else begin
-      if(CPU.dcache.p1_MemWrite_i)
-        $fdisplay(outfile2, "Cycle: %d, Write Miss, Address: %h, Write Data: %h", counter, CPU.dcache.p1_addr_i, CPU.dcache.p1_data_i);
-      else if(CPU.dcache.p1_MemRead_i)
-        $fdisplay(outfile2, "Cycle: %d, Read Miss , Address: %h, Read Data : %h", counter, CPU.dcache.p1_addr_i, CPU.dcache.p1_data_o);
+      if(CPU.dcache.MemWrite_i)
+        $fdisplay(outfile2, "Cycle: %d, Write Miss, Address: %h, Write Data: %h", counter, CPU.dcache.addr_i, CPU.dcache.data_i);
+      else if(CPU.dcache.MemRead_i)
+        $fdisplay(outfile2, "Cycle: %d, Read Miss , Address: %h, Read Data : %h", counter, CPU.dcache.addr_i, CPU.dcache.data_o);
     end
     flag = 1'b1;
   end
-  else if(!CPU.dcache.p1_stall_o) begin
+  else if(!CPU.dcache.stall_o) begin
     if(!flag) begin
-      if(CPU.dcache.p1_MemWrite_i)
-        $fdisplay(outfile2, "Cycle: %d, Write Hit , Address: %h, Write Data: %h", counter, CPU.dcache.p1_addr_i, CPU.dcache.p1_data_i);
-      else if(CPU.dcache.p1_MemRead_i)
-        $fdisplay(outfile2, "Cycle: %d, Read Hit  , Address: %h, Read Data : %h", counter, CPU.dcache.p1_addr_i, CPU.dcache.p1_data_o);
+      if(CPU.dcache.MemWrite_i)
+        $fdisplay(outfile2, "Cycle: %d, Write Hit , Address: %h, Write Data: %h", counter, CPU.dcache.addr_i, CPU.dcache.data_i);
+      else if(CPU.dcache.MemRead_i)
+        $fdisplay(outfile2, "Cycle: %d, Read Hit  , Address: %h, Read Data : %h", counter, CPU.dcache.addr_i, CPU.dcache.data_o);
     end
     flag = 1'b0;
   end

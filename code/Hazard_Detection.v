@@ -2,6 +2,7 @@
 
 module Hazard_Detection (
   input                 clk,
+  input                 mem_stall,
   input [`INSR_LEN-1:0] id_insr,
   input [4:0] rd_3,
   input [1:0] reg_src_3,
@@ -49,7 +50,7 @@ module Hazard_Detection (
   wire fw_dm_alu_next = rd_3 != 5'b0 && rd_3 == id_insr[24:20] &&
       id_opcode == `OP_STORE;
   always @(posedge clk) begin
-    fw_dm_alu <= fw_dm_alu_next;
+    if (!mem_stall) fw_dm_alu <= fw_dm_alu_next;
   end
 
 endmodule

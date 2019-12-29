@@ -261,27 +261,22 @@ module CPU (
   wire [`REG_LEN-1:0] mem_data;
 
   DCache_Top dcache(
-    .clk_i          (clk_i),
-    .rst_i          (rst_i),
-    .mem_data_i     (mem_data_i),
-    .mem_ack_i      (mem_ack_i),
-    .mem_data_o     (mem_data_o),
-    .mem_addr_o     (mem_addr_o),
-    .mem_enable_o   (mem_enable_o),
-    .mem_write_o    (mem_write_o),
-    .p1_data_i      (reg_2_data_4),
-    .p1_addr_i      (alu_result_4),
-    .p1_MemRead_i   (mem_read_4),
-    .p1_MemWrite_i  (mem_write_4),
-    .p1_data_o      (mem_data),
-    .p1_stall_o     (mem_stall_4)
-    //.clk         (clk_i),
-    //.addr        (alu_result_4),
-    //.data        (reg_2_data_4),
-    //.width       (mem_width_4),
-    //.memwrite    (mem_write_4),
-    //.sign_extend (mem_sign_extend_4),
-    //.result      (mem_data)
+    .clk_i        (clk_i),
+    .rst_i        (rst_i),
+    .mem_data_i   (mem_data_i),
+    .mem_ack_i    (mem_ack_i),
+    .mem_data_o   (mem_data_o),
+    .mem_addr_o   (mem_addr_o),
+    .mem_enable_o (mem_enable_o),
+    .mem_write_o  (mem_write_o),
+    .data_i       (reg_2_data_4),
+    .addr_i       (alu_result_4),
+    .MemRead_i    (mem_read_4),
+    .MemWrite_i   (mem_write_4),
+    .width        (mem_width_4),
+    .sign_extend  (mem_sign_extend_4),
+    .data_o       (mem_data),
+    .stall_o      (mem_stall_4)
   );
 
   MUX32_4 mux_reg_write_data(
@@ -306,6 +301,7 @@ module CPU (
   wire        hazard_stall;
   Hazard_Detection hazard_detect(
     .clk          (clk_i),
+    .mem_stall    (mem_stall_4),
     .id_insr      (instruction_2),
     .rd_3         (reg_addr_3),
     .reg_src_3    (reg_src_3),

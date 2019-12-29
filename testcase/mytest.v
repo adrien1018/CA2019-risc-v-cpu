@@ -6,10 +6,9 @@ reg          Clk;
 reg          Reset;
 reg          Start;
 reg [1023:0] file;
-reg [4:1]    stall;
-reg [31:0]   insr[4:2];
-reg [31:0]   pc[4:2];
-reg          prev_stall;
+reg [3:1]    stall;
+reg [31:0]   insr[3:2];
+reg [31:0]   pc[3:2];
 integer      i;
 
 wire [`DM_UNIT_MASK:0] mem_cpu_data;
@@ -89,7 +88,6 @@ initial begin
   Clk = 0;
   Reset = 0;
   Start = 0;
-  prev_stall = 0;
 
   #(`CYCLE_TIME/4)
   Reset = 1;
@@ -114,55 +112,52 @@ always @(posedge Clk) begin
       CPU.hazard_stall,
     );
 
-  if (!prev_stall) begin
-    if (!stall[4])
+  if (!CPU.mem_stall_4) begin
+    if (!stall[3])
       $display("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d 0x%x",
         $signed(CPU.registers.register[ 0]),
-        $signed(CPU.registers.register[ 1]),
-        $signed(CPU.registers.register[ 2]),
-        $signed(CPU.registers.register[ 3]),
-        $signed(CPU.registers.register[ 4]),
-        $signed(CPU.registers.register[ 5]),
-        $signed(CPU.registers.register[ 6]),
-        $signed(CPU.registers.register[ 7]),
-        $signed(CPU.registers.register[ 8]),
-        $signed(CPU.registers.register[ 9]),
-        $signed(CPU.registers.register[10]),
-        $signed(CPU.registers.register[11]),
-        $signed(CPU.registers.register[12]),
-        $signed(CPU.registers.register[13]),
-        $signed(CPU.registers.register[14]),
-        $signed(CPU.registers.register[15]),
-        $signed(CPU.registers.register[16]),
-        $signed(CPU.registers.register[17]),
-        $signed(CPU.registers.register[18]),
-        $signed(CPU.registers.register[19]),
-        $signed(CPU.registers.register[20]),
-        $signed(CPU.registers.register[21]),
-        $signed(CPU.registers.register[22]),
-        $signed(CPU.registers.register[23]),
-        $signed(CPU.registers.register[24]),
-        $signed(CPU.registers.register[25]),
-        $signed(CPU.registers.register[26]),
-        $signed(CPU.registers.register[27]),
-        $signed(CPU.registers.register[28]),
-        $signed(CPU.registers.register[29]),
-        $signed(CPU.registers.register[30]),
-        $signed(CPU.registers.register[31]),
-        pc[4],
-        insr[4],
+        $signed(CPU.reg_addr_5 ==  1 ? CPU.reg_write_data_5 : CPU.registers.register[ 1]),
+        $signed(CPU.reg_addr_5 ==  2 ? CPU.reg_write_data_5 : CPU.registers.register[ 2]),
+        $signed(CPU.reg_addr_5 ==  3 ? CPU.reg_write_data_5 : CPU.registers.register[ 3]),
+        $signed(CPU.reg_addr_5 ==  4 ? CPU.reg_write_data_5 : CPU.registers.register[ 4]),
+        $signed(CPU.reg_addr_5 ==  5 ? CPU.reg_write_data_5 : CPU.registers.register[ 5]),
+        $signed(CPU.reg_addr_5 ==  6 ? CPU.reg_write_data_5 : CPU.registers.register[ 6]),
+        $signed(CPU.reg_addr_5 ==  7 ? CPU.reg_write_data_5 : CPU.registers.register[ 7]),
+        $signed(CPU.reg_addr_5 ==  8 ? CPU.reg_write_data_5 : CPU.registers.register[ 8]),
+        $signed(CPU.reg_addr_5 ==  9 ? CPU.reg_write_data_5 : CPU.registers.register[ 9]),
+        $signed(CPU.reg_addr_5 == 10 ? CPU.reg_write_data_5 : CPU.registers.register[10]),
+        $signed(CPU.reg_addr_5 == 11 ? CPU.reg_write_data_5 : CPU.registers.register[11]),
+        $signed(CPU.reg_addr_5 == 12 ? CPU.reg_write_data_5 : CPU.registers.register[12]),
+        $signed(CPU.reg_addr_5 == 13 ? CPU.reg_write_data_5 : CPU.registers.register[13]),
+        $signed(CPU.reg_addr_5 == 14 ? CPU.reg_write_data_5 : CPU.registers.register[14]),
+        $signed(CPU.reg_addr_5 == 15 ? CPU.reg_write_data_5 : CPU.registers.register[15]),
+        $signed(CPU.reg_addr_5 == 16 ? CPU.reg_write_data_5 : CPU.registers.register[16]),
+        $signed(CPU.reg_addr_5 == 17 ? CPU.reg_write_data_5 : CPU.registers.register[17]),
+        $signed(CPU.reg_addr_5 == 18 ? CPU.reg_write_data_5 : CPU.registers.register[18]),
+        $signed(CPU.reg_addr_5 == 19 ? CPU.reg_write_data_5 : CPU.registers.register[19]),
+        $signed(CPU.reg_addr_5 == 20 ? CPU.reg_write_data_5 : CPU.registers.register[20]),
+        $signed(CPU.reg_addr_5 == 21 ? CPU.reg_write_data_5 : CPU.registers.register[21]),
+        $signed(CPU.reg_addr_5 == 22 ? CPU.reg_write_data_5 : CPU.registers.register[22]),
+        $signed(CPU.reg_addr_5 == 23 ? CPU.reg_write_data_5 : CPU.registers.register[23]),
+        $signed(CPU.reg_addr_5 == 24 ? CPU.reg_write_data_5 : CPU.registers.register[24]),
+        $signed(CPU.reg_addr_5 == 25 ? CPU.reg_write_data_5 : CPU.registers.register[25]),
+        $signed(CPU.reg_addr_5 == 26 ? CPU.reg_write_data_5 : CPU.registers.register[26]),
+        $signed(CPU.reg_addr_5 == 27 ? CPU.reg_write_data_5 : CPU.registers.register[27]),
+        $signed(CPU.reg_addr_5 == 28 ? CPU.reg_write_data_5 : CPU.registers.register[28]),
+        $signed(CPU.reg_addr_5 == 29 ? CPU.reg_write_data_5 : CPU.registers.register[29]),
+        $signed(CPU.reg_addr_5 == 30 ? CPU.reg_write_data_5 : CPU.registers.register[30]),
+        $signed(CPU.reg_addr_5 == 31 ? CPU.reg_write_data_5 : CPU.registers.register[31]),
+        pc[3],
+        insr[3],
       );
-    if (insr[4] == 32'b0) // instruction end
+    if (insr[3] == 32'b0) // instruction end
       $finish;
-    for (i=3; i<=4; i=i+1) begin
-      insr[i] <= insr[i-1];
-      pc[i] <= pc[i-1];
-    end
+    insr[3] <= insr[2];
     insr[2] <= CPU.instruction_2;
+    pc[3] <= pc[2];
     pc[2] <= CPU.now_pc_2;
-    stall <= {stall[3:2], stall[1] | CPU.hazard_stall, CPU.next_nop};
+    stall <= {stall[2], stall[1] | CPU.hazard_stall, CPU.next_nop};
   end
-  prev_stall <= CPU.mem_stall_4;
 end
 
 endmodule

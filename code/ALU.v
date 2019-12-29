@@ -10,13 +10,13 @@ module ALU (
 
   always @* begin // a combo logic (no clock)
     case (alu_op)
-      4'b0000: // ADD, SUB, BEQ, BNE
+      4'b0000: // ADD, SUB
         result = flag ? opr_1 - opr_2 : opr_1 + opr_2;
       4'b0001: // SLL
         result = opr_1 << opr_2[4:0];
-      4'b0010: // SLT, BLT, BGE
+      4'b0010: // SLT
         result = {31'b0, $signed(opr_1) < $signed(opr_2)};
-      4'b0011: // SLTU, BLTU, BGEU
+      4'b0011: // SLTU
         result = {31'b0, opr_1 < opr_2};
       4'b0100: // XOR
         result = opr_1 ^ opr_2;
