@@ -1,3 +1,74 @@
+`define DM_BITS 9 // 16 KiB
+`define DM_MASK ((1<<`DM_BITS)-1)
+`define DM_UNIT 8 // 256 bits = 32 bytes
+`define DM_UNIT_MASK ((1<<`DM_UNIT)-1)
+
+module Data_Memory (
+  input                    clk_i,
+  input                    rst_i,
+  input [31:0]             addr_i,
+  input [`DM_UNIT_MASK:0]  data_i,
+  input                    enable_i,
+  input                    write_i,
+  output                   ack_o,
+  output [`DM_UNIT_MASK:0] data_o
+);
+
+  reg  [`DM_UNIT_MASK:0] memory[0:`DM_MASK];    //16KB
+  reg  [3:0]             count;
+  reg  [`DM_UNIT_MASK:0] data;
+  wire [32-`DM_UNIT+3:0] addr;
+
+  parameter STATE_IDLE = 1'h0,
+            STATE_WAIT = 1'h1;
+  reg [1:0] state;
+
+  assign ack_o  = (state == STATE_WAIT) && (count == 4'd9);
+  assign addr   = addr_i >> (32 - `DM_UNIT + 3);
+  assign data_o = data;
+
+  always @(posedge clk_i or negedge rst_i) begin
+    if (~rst_i) begin
+      state <= STATE_IDLE;
+      count <= 4'd0;
+    end
+    else begin
+      case (state)
+        STATE_IDLE: begin
+          // write_reg <= write_i;
+          if(enable_i) begin
+            state <= STATE_WAIT;
+            count <= count + 1;
+          end
+        end
+        STATE_WAIT: begin
+          if(count == 4'd9) begin
+            state <= STATE_IDLE;
+            count <= 0;
+          end
+          else begin
+            count <= count + 1;
+          end
+        end
+      endcase
+    end
+  end
+
+  always@(posedge clk_i) begin
+    if (ack_o) begin
+      if (write_i) begin
+        memory[addr] <= data_i;
+        data <= data_i;
+      end
+      else begin
+        data = memory[addr];
+      end
+    end
+  end
+endmodule
+
+/*
+
 `define DM_BITS 10 // 4 KiB
 `define DM_MASK ((1<<`DM_BITS)-1)
 
@@ -50,4 +121,4 @@ module Data_Memory (
       endcase
     end
   end
-endmodule
+endmodule*/
