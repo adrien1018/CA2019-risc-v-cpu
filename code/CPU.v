@@ -1,7 +1,14 @@
 module CPU (
   input clk_i,
   input rst_i,
-  input start_i
+  input start_i,
+  // memory interface
+  input  [255:0] mem_data_i,
+  input          mem_ack_i,
+  output [255:0] mem_data_o,
+  output [31:0]  mem_addr_o,
+  output         mem_enable_o,
+  output         mem_write_o
 );
 
   // ----- Instruction fetch stage -----
@@ -230,17 +237,33 @@ module CPU (
   wire        mem_write_4;
   // . ->
   wire [31:0] reg_write_data_4;
+  // <- . ->
+  wire        mem_stall_4;
 
   wire [31:0] mem_data;
 
-  Data_Memory data_mem(
-    .clk         (clk_i),
-    .addr        (alu_result_4),
-    .data        (reg_2_data_4),
-    .width       (mem_width_4),
-    .memwrite    (mem_write_4),
-    .sign_extend (mem_sign_extend_4),
-    .result      (mem_data)
+  dcache_top dcache(
+    .clk_i          (clk_i),
+    .rst_i          (rst_i),
+    .mem_data_i     (mem_data_i),
+    .mem_ack_i      (mem_ack_i),
+    .mem_data_o     (mem_data_o),
+    .mem_addr_o     (mem_addr_o),
+    .mem_enable_o   (mem_enable_o),
+    .mem_write_o    (mem_write_o),
+    .p1_data_i      (reg_2_data_4),
+    .p1_addr_i      (alu_result_4),
+    .p1_MemRead_i   (1'b1),
+    .p1_MemWrite_i  (mem_write_4),
+    .p1_data_o      (mem_data),
+    .p1_stall_o     (mem_stall_4)
+    //.clk         (clk_i),
+    //.addr        (alu_result_4),
+    //.data        (reg_2_data_4),
+    //.width       (mem_width_4),
+    //.memwrite    (mem_write_4),
+    //.sign_extend (mem_sign_extend_4),
+    //.result      (mem_data)
   );
 
   MUX32_4 mux_reg_write_data(
@@ -291,6 +314,7 @@ module CPU (
   // Pipeline registers
   IF_ID if_id(
     .clk         (clk_i),
+    .mem_stall   (mem_stall_4),
     .now_pc_i    (now_pc_1),
     .inst_i      (instruction_1),
     .is_jalr_i   (is_jalr),
@@ -303,6 +327,7 @@ module CPU (
 
   ID_EX id_ex(
     .clk               (clk_i),
+    .mem_stall         (mem_stall_4),
     .alu_1_opr_i       (alu_1_opr_2),
     .alu_2_opr_i       (alu_2_opr_2),
     .alu_op_i          (alu_op_2),
@@ -330,6 +355,7 @@ module CPU (
 
   EX_MEM ex_mem(
     .clk               (clk_i),
+    .mem_stall         (mem_stall_4),
     .advance_pc_i      (advance_pc_3),
     .alu_result_i      (alu_result_3),
     .reg_2_data_i      (reg_2_data_3),
@@ -350,6 +376,7 @@ module CPU (
 
   MEM_WB mem_wb(
     .clk          (clk_i),
+    .mem_stall    (mem_stall_4),
     .write_back_i (reg_write_data_4),
     .write_addr_i (reg_addr_4),
     .write_back_o (reg_write_data_5),

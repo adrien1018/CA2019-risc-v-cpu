@@ -1,22 +1,22 @@
 
 module dcache_top(
   // System clock, start
-  input                 clk_i,
-  input                 rst_i,
+  input               clk_i,
+  input               rst_i,
   // to Data Memory interface
-  input    [256-1:0]    mem_data_i,
-  input                 mem_ack_i,
-  output   [256-1:0]    mem_data_o,
-  output   [32-1:0]     mem_addr_o,
-  output                mem_enable_o,
-  output                mem_write_o,
+  input  [256-1:0]    mem_data_i,
+  input               mem_ack_i,
+  output [256-1:0]    mem_data_o,
+  output [32-1:0]     mem_addr_o,
+  output              mem_enable_o,
+  output              mem_write_o,
   // to core interface
-  input    [32-1:0]     p1_data_i,
-  input    [32-1:0]     p1_addr_i,
-  input                 p1_MemRead_i,
-  input                 p1_MemWrite_i,
-  output   [32-1:0]     p1_data_o,
-  output                p1_stall_o
+  input  [32-1:0]     p1_data_i,
+  input  [32-1:0]     p1_addr_i,
+  input               p1_MemRead_i,
+  input               p1_MemWrite_i,
+  output [32-1:0]     p1_data_o,
+  output              p1_stall_o
 );
 
 //
