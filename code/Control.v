@@ -10,6 +10,7 @@ module Control (
   output       is_branch,
   output       is_jalr,
   output       is_jal,
+  output       mem_read,
   output       mem_write,
   output [1:0] mem_width,
   output       mem_sign_extend,
@@ -25,6 +26,7 @@ module Control (
   assign reg_write = opcode != `OP_STORE && opcode != `OP_BRANCH;
   assign is_jalr = opcode == `OP_JALR;
   assign is_jal = opcode == `OP_JAL;
+  assign mem_read = opcode == `OP_LOAD;
   assign mem_write = opcode == `OP_STORE;
   assign mem_width = funct3[1:0];
   assign mem_sign_extend = ~funct3[2];

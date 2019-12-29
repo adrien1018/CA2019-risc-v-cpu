@@ -45,6 +45,8 @@ Data_Memory Data_Memory(
 );
 
 initial begin
+  $dumpfile ("invchn26.vcd");
+  $dumpvars;
   counter = 0;
   // initialize instruction memory (1KB)
   for (i=0; i<255; i=i+1) begin
@@ -68,8 +70,10 @@ initial begin
   CPU.if_id.inst_o = 32'b10011; // NOP
   CPU.if_id.prev_jalr_o = 1'b0;
   CPU.id_ex.reg_addr_o = 5'b0;
+  CPU.id_ex.mem_read_o = 1'b0;
   CPU.id_ex.mem_write_o = 1'b0;
   CPU.ex_mem.reg_addr_o = 5'b0;
+  CPU.ex_mem.mem_read_o = 1'b0;
   CPU.ex_mem.mem_write_o = 1'b0;
   CPU.mem_wb.write_addr_o = 5'b0;
 
@@ -80,8 +84,10 @@ initial begin
     $readmemb("../testdata/instruction.txt", CPU.Instruction_Memory.memory);
 
   // Open output file
-  outfile = $fopen("../testdata/output.txt") | 1;
-  outfile2 = $fopen("../testdata/cache.txt") | 1;
+  outfile = $fopen("../testdata/output.txt");
+  outfile2 = $fopen("../testdata/cache.txt");
+  //outfile = $fopen("../testdata/output.txt") | 1;
+  //outfile2 = $fopen("../testdata/cache.txt") | 1;
 
   // Set Input n into data memory at 0x00
   Data_Memory.memory[0] = 256'h5;        // n = 5 for example
@@ -112,7 +118,17 @@ always@(posedge Clk) begin
   // print PC
   $fdisplay(outfile, "cycle = %0d, Start = %b\nPC = %d", counter, Start, CPU.PC.pc_o);
 
+  $fdisplay(outfile, "read%b, write%b, p1_req%b, sram_tag = %x, cache_tag = %x, state = %d",
+      CPU.dcache.p1_MemRead_i,
+      CPU.dcache.p1_MemWrite_i,
+      CPU.dcache.p1_req,
+      CPU.dcache.sram_cache_tag,
+      CPU.dcache.cache_sram_tag,
+      CPU.dcache.state
+  );
+
   // print Registers
+  /*
   $fdisplay(outfile, "Registers");
   $fdisplay(outfile, "x0 = %h, x8  = %h, x16 = %h, x24 = %h", CPU.Registers.register[0], CPU.Registers.register[8] , CPU.Registers.register[16], CPU.Registers.register[24]);
   $fdisplay(outfile, "x1 = %h, x9  = %h, x17 = %h, x25 = %h", CPU.Registers.register[1], CPU.Registers.register[9] , CPU.Registers.register[17], CPU.Registers.register[25]);
@@ -134,7 +150,7 @@ always@(posedge Clk) begin
   $fdisplay(outfile, "Data Memory: 0x00E0 = %h", Data_Memory.memory[7]);
   $fdisplay(outfile, "Data Memory: 0x0400 = %h", Data_Memory.memory[32]);
 
-  $fdisplay(outfile, "\n");
+  $fdisplay(outfile, "\n");*/
 
   // print Data Cache Status
   if(CPU.dcache.p1_stall_o && CPU.dcache.state==0) begin

@@ -24,7 +24,7 @@ module Data_Memory (
   reg [1:0] state;
 
   assign ack_o  = (state == STATE_WAIT) && (count == 4'd9);
-  assign addr   = addr_i >> (32 - `DM_UNIT + 3);
+  assign addr   = addr_i[31:`DM_UNIT-3];
   assign data_o = data;
 
   always @(posedge clk_i or negedge rst_i) begin
@@ -35,7 +35,6 @@ module Data_Memory (
     else begin
       case (state)
         STATE_IDLE: begin
-          // write_reg <= write_i;
           if(enable_i) begin
             state <= STATE_WAIT;
             count <= count + 1;

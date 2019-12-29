@@ -29,6 +29,7 @@ module ID_EX (
   input [31:0] advance_pc_i,
   input [31:0] reg_2_data_i,
   input [4:0]  reg_addr_i,
+  input        mem_read_i,
   input        mem_write_i,
   input [1:0]  mem_width_i,
   input        mem_sign_extend_i,
@@ -41,6 +42,7 @@ module ID_EX (
   output reg [31:0] advance_pc_o,
   output reg [31:0] reg_2_data_o,
   output reg [4:0]  reg_addr_o,
+  output reg        mem_read_o,
   output reg        mem_write_o,
   output reg [1:0]  mem_width_o,
   output reg        mem_sign_extend_o,
@@ -55,6 +57,7 @@ module ID_EX (
       advance_pc_o <= advance_pc_i;
       reg_2_data_o <= reg_2_data_i;
       reg_addr_o <= nop_i ? 5'b0 : reg_addr_i;
+      mem_read_o <= nop_i ? 1'b0 : mem_read_i;
       mem_write_o <= nop_i ? 1'b0 : mem_write_i;
       mem_width_o <= mem_width_i;
       mem_sign_extend_o <= mem_sign_extend_i;
@@ -73,6 +76,7 @@ module EX_MEM (
   input [1:0]  mem_width_i,
   input        mem_sign_extend_i,
   input [1:0]  reg_src_i,
+  input        mem_read_i,
   input        mem_write_i,
   output reg [31:0] advance_pc_o,
   output reg [31:0] alu_result_o,
@@ -81,6 +85,7 @@ module EX_MEM (
   output reg [1:0]  mem_width_o,
   output reg        mem_sign_extend_o,
   output reg [1:0]  reg_src_o,
+  output reg        mem_read_o,
   output reg        mem_write_o
 );
   always @(posedge clk) begin
@@ -92,6 +97,7 @@ module EX_MEM (
       mem_width_o <= mem_width_i;
       mem_sign_extend_o <= mem_sign_extend_i;
       reg_src_o <= reg_src_i;
+      mem_read_o <= mem_read_i;
       mem_write_o <= mem_write_i;
     end
   end

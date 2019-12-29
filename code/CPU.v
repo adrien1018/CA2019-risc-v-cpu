@@ -11,6 +11,8 @@ module CPU (
   output         mem_write_o
 );
 
+  wire mem_stall_4; // memory stall from stage 4
+
   // ----- Instruction fetch stage -----
   // . <-
   wire [31:0] jump_pc_back1; // from stage 2
@@ -24,11 +26,12 @@ module CPU (
   wire [31:0] next_pc;
 
   PC PC(
-    .clk_i   (clk_i),
-    .rst_i   (rst_i),
-    .start_i (start_i),
-    .pc_i    (next_pc),
-    .pc_o    (now_pc_1)
+    .clk_i       (clk_i),
+    .rst_i       (rst_i),
+    .mem_stall_i (mem_stall_4),
+    .start_i     (start_i),
+    .pc_i        (next_pc),
+    .pc_o        (now_pc_1)
   );
 
   Adder pc_advance_1(
@@ -66,6 +69,7 @@ module CPU (
   wire [3:0]  alu_op_2;
   wire        alu_flag_2;
   wire [4:0]  reg_addr_2;
+  wire        mem_read_2;
   wire        mem_write_2;
   wire [1:0]  mem_width_2;
   wire        mem_sign_extend_2;
@@ -138,6 +142,7 @@ module CPU (
     .is_branch       (is_branch),
     .is_jalr         (is_jalr),
     .is_jal          (is_jal),
+    .mem_read        (mem_read_2),
     .mem_write       (mem_write_2),
     .mem_width       (mem_width_2),
     .mem_sign_extend (mem_sign_extend_2),
@@ -196,6 +201,7 @@ module CPU (
   // -> . ->
   wire [31:0] advance_pc_3;
   wire [4:0]  reg_addr_3;
+  wire        mem_read_3;
   wire        mem_write_3;
   wire [1:0]  mem_width_3;
   wire        mem_sign_extend_3;
@@ -233,12 +239,10 @@ module CPU (
   wire [1:0]  mem_width_4;
   wire        mem_sign_extend_4;
   wire [1:0]  reg_src_4;
-  // -> . ->
+  wire        mem_read_4;
   wire        mem_write_4;
   // . ->
   wire [31:0] reg_write_data_4;
-  // <- . ->
-  wire        mem_stall_4;
 
   wire [31:0] mem_data;
 
@@ -253,7 +257,7 @@ module CPU (
     .mem_write_o    (mem_write_o),
     .p1_data_i      (reg_2_data_4),
     .p1_addr_i      (alu_result_4),
-    .p1_MemRead_i   (1'b1),
+    .p1_MemRead_i   (mem_read_4),
     .p1_MemWrite_i  (mem_write_4),
     .p1_data_o      (mem_data),
     .p1_stall_o     (mem_stall_4)
@@ -335,6 +339,7 @@ module CPU (
     .advance_pc_i      (advance_pc_2),
     .reg_2_data_i      (reg_2_data_2),
     .reg_addr_i        (reg_addr_2),
+    .mem_read_i        (mem_read_2),
     .mem_write_i       (mem_write_2),
     .mem_width_i       (mem_width_2),
     .mem_sign_extend_i (mem_sign_extend_2),
@@ -347,6 +352,7 @@ module CPU (
     .advance_pc_o      (advance_pc_3),
     .reg_2_data_o      (reg_2_data_3_flow),
     .reg_addr_o        (reg_addr_3),
+    .mem_read_o        (mem_read_3),
     .mem_write_o       (mem_write_3),
     .mem_width_o       (mem_width_3),
     .mem_sign_extend_o (mem_sign_extend_3),
@@ -363,6 +369,7 @@ module CPU (
     .mem_width_i       (mem_width_3),
     .mem_sign_extend_i (mem_sign_extend_3),
     .reg_src_i         (reg_src_3),
+    .mem_read_i        (mem_read_3),
     .mem_write_i       (mem_write_3),
     .advance_pc_o      (advance_pc_4),
     .alu_result_o      (alu_result_4),
@@ -371,6 +378,7 @@ module CPU (
     .mem_width_o       (mem_width_4),
     .mem_sign_extend_o (mem_sign_extend_4),
     .reg_src_o         (reg_src_4),
+    .mem_read_o        (mem_read_4),
     .mem_write_o       (mem_write_4)
   );
 

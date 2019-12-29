@@ -1,6 +1,7 @@
 module PC (
   input        clk_i,
   input        rst_i,
+  input        mem_stall_i,
   input        start_i,
   input [31:0] pc_i,
   output reg [31:0] pc_o
@@ -10,10 +11,8 @@ module PC (
       pc_o <= 32'b0;
     end
     else begin
-      if (start_i)
+      if (start_i && !mem_stall_i)
         pc_o <= pc_i;
-      else
-        pc_o <= pc_o;
     end
   end
 endmodule
