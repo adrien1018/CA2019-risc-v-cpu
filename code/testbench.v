@@ -45,8 +45,6 @@ Data_Memory data_memory(
 );
 
 initial begin
-  $dumpfile ("invchn26.vcd");
-  $dumpvars;
   counter = 0;
   // initialize instruction memory
   for (i=0; i<=`IM_MASK; i=i+1)
